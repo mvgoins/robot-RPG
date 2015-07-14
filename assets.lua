@@ -21,6 +21,8 @@ screenborder2 = love.graphics.newImage("art/screenborder2.png")
 screenborder3 = love.graphics.newImage("art/screenborder3.png")
 screenborder4 = love.graphics.newImage("art/screenborder4.png")
 
+menuSelector = love.graphics.newImage("art/menuselector.png")
+
 -- combat
 batPic = love.graphics.newImage("art/bat.png")
 ratPic = love.graphics.newImage("art/rat.png")

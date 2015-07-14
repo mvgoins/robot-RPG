@@ -131,9 +131,9 @@ function viewGame() -- the main view of the map/dungeon
 		love.graphics.print("Save Game",416,332)
 		
 		if gameMaincursor < 5 then
-			love.graphics.draw(combatSelector,396, 35 + 50 * (gameMaincursor - 1),0,.5,.5)
+			love.graphics.draw(menuSelector,396, 35 + 50 * (gameMaincursor - 1))
 		else 
-			love.graphics.draw(combatSelector,396, 335, 0, .5, .5)
+			love.graphics.draw(menuSelector,396, 335)
 		end
 
 	end -- end main-subkey
@@ -142,8 +142,34 @@ function viewGame() -- the main view of the map/dungeon
 		love.graphics.print("Restore PP",416,82)
 		love.graphics.print("Upgrade Attribute",416,132)
 		love.graphics.print("Upgrade Skill",416,182)
+		
+		love.graphics.draw(menuSelector,396,85 + 50 * (gameScrapcursor - 1))
 	end
 
+	if subkey == "mainCheck" then
+		love.graphics.print("Checking...",416,82)
+	end
+	
+	if subkey == "mainItems" then
+		love.graphics.print("Items...",416,82)
+	end
+	
+	if subkey == "mainSkills" then
+		love.graphics.print("Skills...",416,82)
+	end
+	
+	-- scrap submenu
+	if subkey == "scrapPP" then
+		love.graphics.print("make PPPPPP",416,82)
+	end
+	
+	if subkey == "scrapAttributes" then
+		love.graphics.print("upgrade stuff!",416,82)
+	end
+	
+	if subkey == "scrapSkills" then
+		love.graphics.print("upgrade other stuff!!",416,82)
+	end
 	
 
 end -- end viewGame
