@@ -30,8 +30,14 @@ gameItemcursor = 1
 gameSkillscursor = 1
 gameScrapcursor = 1
 
+scrapPPcursor = 1
+scrapAttcursor = 1
+scrapSkillcursor = 1
+
+menuYNcursor = 1
+
 -- stats
-prostats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10, ["scrap"]=0, ["weapon"] = 0, ["armor"] = 0, ["speed"] = 0} -- trying string keys 
+prostats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10, ["scrap"]=0, ["weapon"] = 0, ["weaponmax"] = 3, ["armor"] = 0, ["armormax"] = 3, ["speed"] = 0, ["speedmax"] = 3} -- trying string keys 
 proskills = {["heal"] = 1, ["harm"] = 0, ["shield"] = 0} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
 proinventory = {["bluekey"] = "no", ["weapon"] = "no", ["armor"] = "no", ["speed"] = "no"}
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
@@ -118,10 +124,8 @@ function viewGame() -- the main view of the map/dungeon
 		love.graphics.print("Scrap: "..prostats.scrap,416,132)
 		love.graphics.print("[M]enu",416,332)
 		
-	end -- end none-subkey
-	
-	
-	if subkey == "main" then -- draw the menu overtop
+		
+	elseif subkey == "main" then -- draw the menu overtop
 
 		love.graphics.print("Check",416,32)
 		love.graphics.print("Skills",416,82)
@@ -136,42 +140,84 @@ function viewGame() -- the main view of the map/dungeon
 			love.graphics.draw(menuSelector,396, 335)
 		end
 
-	end -- end main-subkey
 	
-	if subkey == "mainScrap" then
+	elseif subkey == "mainScrap" then
 		love.graphics.print("Restore PP",416,82)
 		love.graphics.print("Upgrade Attribute",416,132)
 		love.graphics.print("Upgrade Skill",416,182)
 		
 		love.graphics.draw(menuSelector,396,85 + 50 * (gameScrapcursor - 1))
-	end
+	
 
-	if subkey == "mainCheck" then
+	elseif subkey == "mainCheck" then
 		love.graphics.print("Checking...",416,82)
-	end
 	
-	if subkey == "mainItems" then
+	elseif subkey == "mainItems" then
 		love.graphics.print("Items...",416,82)
-	end
 	
-	if subkey == "mainSkills" then
+	
+	elseif subkey == "mainSkills" then
 		love.graphics.print("Skills...",416,82)
-	end
+	
 	
 	-- scrap submenu
-	if subkey == "scrapPP" then
-		love.graphics.print("make PPPPPP",416,82)
-	end
+	elseif subkey == "scrapPP" then
+		love.graphics.printf("Turn scrap into power?",416,32,200,"center")
+		love.graphics.print("No",416,132)
+		love.graphics.print("Yes",416,182)
+		
+		love.graphics.draw(menuSelector,396,135 + 50 * (scrapPPcursor - 1))
 	
-	if subkey == "scrapAttributes" then
-		love.graphics.print("upgrade stuff!",416,82)
-	end
 	
-	if subkey == "scrapSkills" then
-		love.graphics.print("upgrade other stuff!!",416,82)
-	end
+	elseif subkey == "scrapAttributes" then
+		love.graphics.print("Upgrade attribute?",416,32)
+		love.graphics.print("Weapon: "..prostats.weapon.."/"..prostats.weaponmax,416,132)
+		love.graphics.print("Armor : "..prostats.armor.."/"..prostats.armormax,416,182)
+		love.graphics.print("Speed : "..prostats.speed.."/"..prostats.speedmax,416,232)
+		
+		love.graphics.draw(menuSelector,396,135 + 50 * (scrapAttcursor - 1))
 	
-
+	
+	elseif subkey == "scrapSkills" then
+		love.graphics.print("Upgrade skill?",416,32)
+		love.graphics.print("Heal  : "..proskills.heal.."/2",416,132)
+		love.graphics.print("Harm  : "..proskills.harm.."/2",416,182)
+		love.graphics.print("Shield: "..proskills.shield.."/2",416,232)
+		
+		love.graphics.draw(menuSelector,396,135 + 50 * (scrapSkillcursor - 1))
+	
+	
+	elseif subkey == "weaponCheck" then
+		local nextwep = prostats.weapon + 1
+		local nextwepcost = nextwep * 1000
+		love.graphics.printf("Upgrade weapon?",416,32,200,"center")
+		love.graphics.print("Weapon "..prostats.weapon.." to "..nextwep.." is "..nextwepcost.." scrap.",416,82)
+		love.graphics.print("No",416,132)
+		love.graphics.print("Yes",416,182)
+		
+		love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+	
+	
+	elseif subkey == "armorCheck" then
+	
+	
+	
+	elseif subkey == "speedCheck" then
+	
+	
+	
+	elseif subkey == "healCheck" then
+	
+	
+	
+	elseif subkey == "harmCheck" then
+	
+	
+	
+	elseif subkey == "shieldCheck" then
+	
+	end -- end the whole damn menu drawing stack
+	
 end -- end viewGame
 
 function featureCheck() -- see if the player is on a feature, and do something if they are

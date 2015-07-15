@@ -61,10 +61,10 @@ function keysGame(key)
 			subkey = "main"
 		end	
 	
-	end -- end subkey = none
+	 -- end subkey = none
 
 
-	if subkey == "main" then
+	elseif subkey == "main" then
 	
 		if key == "escape" then
 			subkey = "none"
@@ -89,24 +89,23 @@ function keysGame(key)
 				subkey = "mainSkills"
 			elseif gameMaincursor == 3 then
 				subkey = "mainScrap"
-				print("One enter!")
 			elseif gameMaincursor == 4 then
 				subkey = "mainItems"
 			elseif gameMaincursor == 5 then
 				subkey = "mainSave"
 			end
 		end
-	end -- end subkey-main
+	-- end subkey-main
 	
 	
-	if subkey == "mainItems" then
+	elseif subkey == "mainItems" then
 		if key == "escape" then
 			subkey = "main"
 		end
-	end
+	
 
 	-- scrap top menu
-	if subkey == "mainScrap" then
+	elseif subkey == "mainScrap" then
 		if key == "escape" then
 			subkey = "main"
 		end
@@ -126,7 +125,6 @@ function keysGame(key)
 		if key == "return" then
 			if gameScrapcursor == 1 then
 				subkey = "scrapPP"
-				print("Why enter twice?!")
 			elseif gameScrapcursor == 2 then
 				subkey = "scrapAttributes"
 			elseif gameScrapcursor == 3 then
@@ -134,44 +132,119 @@ function keysGame(key)
 			end
 		end
 		
-	end -- end mainScrap
+	-- end mainScrap
 	
 	-- scrap submenu keys
-	if subkey == "scrapPP" then
+	elseif subkey == "scrapPP" then
 		if key == "escape" then
 			subkey = "mainScrap"
 		end
+		
+		if key == "up" then
+			if scrapPPcursor == 2 then
+				scrapPPcursor = 1
+			end
+		end
+		
+		if key == "down" then
+			if scrapPPcursor == 1 then
+				scrapPPcursor = 2
+			end
+		end
+		
 		if key == "return" then
-			subkey = "none"
-			print("went too far!")
+			if scrapPPcursor == 1 then
+				subkey = "mainScrap"
+			elseif scrapPPcursor == 2 then
+				if prostats.scrap > 9 then
+					if prostats.currentPP < prostats.maxPP then
+						prostats.currentPP = prostats.currentPP + 1
+						prostats.scrap = prostats.scrap - 10
+					end
+				end
+			end
 		end
-	end
+				
+	--end
 	
-	if subkey == "scrapAttributes" then
+	elseif subkey == "scrapAttributes" then
+		if key == "escape" then
+			subkey = "mainScrap"
+		
+		
+		elseif key == "up" then
+			if scrapAttcursor == 2 then
+				scrapAttcursor = 1
+			end
+		
+		
+		elseif key == "down" then
+			if scrapAttcursor == 1 then
+				scrapAttcursor = 2
+			end
+		
+		
+		elseif key == "return" then
+			if scrapAttcursor == 1 then
+				subkey = "weaponCheck"
+			elseif scrapAttcursor == 2 then
+				subkey = "armorCheck"
+			elseif scrapAttcursor == 3 then
+				subkey = "speedCheck"
+			end
+		end
+--	end
+	
+	elseif subkey == "weaponCheck" then
+		if key == "escape" then
+			subkey = "scrapAttributes"
+			
+		elseif key == "up" then
+			if menuYNcursor == 2
+				menuYNcursor = 1
+			end
+		
+		elseif key == "down" then
+			if menuYNcursor == 1 then
+				menuYNcursor = 2
+			end
+			
+		elseif key == "return" then
+			if menuYNcursor == 1 then
+				subkey = "scrapAttributes"
+			elseif menuYNcursor == 2 then
+				if prostats.weapon < prostats.weaponmax then
+					if prostats.scrap >= (prostats.weapon + 1) * 1000
+						prostats.weapon = prostats.weapon + 1
+					end
+				end
+			end
+				
+	elseif subkey == "scrapSkills" then
 		if key == "escape" then
 			subkey = "mainScrap"
 		end
-	end
-	
-	if subkey == "scrapSkills" then
-		if key == "escape" then
-			subkey = "mainScrap"
-		end
-	end
+--	end
 	
 	-- skill keys
-	if subkey == "mainSkills" then
+	elseif subkey == "mainSkills" then
 		if key == "escape" then
 			subkey = "main"
 		end
-	end
+	--end
+	
+	elseif subkey == "mainCheck" then
+		if key == "escape" then
+			subkey = "main"
+		end
 	
 	-- navigate save menu
-	if subkey == "mainSave" then
+	elseif subkey == "mainSave" then
 		if key == "escape" then
 			subkey = "main"
 		end
-	end
+
+	end -- end the whole big if-elseif pile
 	
 end
 
