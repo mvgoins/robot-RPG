@@ -22,7 +22,10 @@ combatTarget = "empty" -- what you're going to fight
 combatTargetBonus = "empty" -- placeholder for multi-target fights
 keyInput = "okay" -- whether or not you can type right now
 combatpicktarget = 0 -- decides what you're going to fight
-combatMenu = "fight" -- what menu option you currently have selected
+combatMenu = "top" -- what menu option you currently have selected
+combatsubMenu = "none"
+combatselect = 1
+combatselectskill = 1
 
 
 gameMaincursor = 1 -- blehhhhh these shouldn't be global
@@ -37,7 +40,7 @@ scrapSkillcursor = 1
 menuYNcursor = 1
 
 -- stats
-prostats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10, ["scrap"]=0, ["weapon"] = 0, ["weaponmax"] = 3, ["armor"] = 0, ["armormax"] = 3, ["speed"] = 0, ["speedmax"] = 3} -- trying string keys 
+prostats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10, ["scrap"]=0, ["weapon"] = 0, ["weaponmax"] = 3, ["armor"] = 0, ["armormax"] = 3, ["speed"] = 0, ["speedmax"] = 3, ["shield"] = 0} -- trying string keys 
 proskills = {["heal"] = 1, ["harm"] = 0, ["shield"] = 0} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
 proinventory = {["bluekey"] = "no", ["weapon"] = "no", ["armor"] = "no", ["speed"] = "no"}
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
@@ -225,7 +228,7 @@ function featureCheck() -- see if the player is on a feature, and do something i
 end
 
 function combatCheck() -- begin the check to see if a random encounter happens -- but it's all combat, I guess? rework for later iteration of the game
-	math.randomseed(os.time()) -- make things more random
+	math.randomseed(os.time()) -- make things more random -- hopefully
 
 	combatCount = combatCount + 1
 	
@@ -245,9 +248,7 @@ function combatSelection()
 	math.randomseed(os.time())
 	combatpicktarget = math.random(1,100)
 	
-	if proloc[1] == 30 and proloc[2] == 30 and proloc[3] == 2 then
-		combatTarget = "boss"
-	elseif combatpicktarget < 51 then -- bats are not coming up often enough; examine randomness (or lack of it)
+	if combatpicktarget < 51 then -- should be even distribution, but it is not; check randomness issues
 		combatTarget = "bat"
 		batstats.maxHP = math.random(10,15) -- bats have between 10 and 15 HP
 		batstats.currentHP = batstats.maxHP
@@ -262,28 +263,17 @@ end -- end combatSelection
 function combatProAttack()
 	math.randomseed(os.time())
 	
+	combatDealDamage()
+	
 	if combatTarget == "bat" then
-		batstats.currentHP = batstats.currentHP - math.random(5,10) + prostats.weapon
-		if batstats.currentHP <= 0 then
-			view = "game"
-			prostats.scrap = prostats.scrap + 10
-		else 
-			prostats.currentHP = prostats.currentHP - math.random(1,5)
-			batstats.currentHP = batstats.currentHP + 1
+		if batstats.currentHP > 0 then
+			combatTakeDamage()
 		end
-	end
 	
-	if combatTarget == "rat" then
-		ratstats.currentHP = ratstats.currentHP - math.random(5,10) + prostats.weapon
-		if ratstats.currentHP <= 0 then
-			view = "game"
-			prostats.scrap = prostats.scrap + 20
-		else prostats.currentHP = prostats.currentHP - math.random(5,10)
+	elseif combatTarget == "rat" then
+		if ratstats.currentHP > 0 then
+			combatTakeDamage()
 		end
-	end
-	
-	if prostats.currentHP <= 0 then
-		view = "gameover"
 	end
 		
 end
@@ -294,9 +284,143 @@ function combatProScare()
 	if math.random(1,100) > 25 then
 		view = "game"
 		combatTarget = "empty" -- I don't know if this is necessary
-	else prostats.currentHP = prostats.currentHP - math.random(1,10)
+	else 
+		combatTakeDamage()
 	end
 	
+
+end
+
+function combatProHeal()
+	math.randomseed(os.time())
+	
+	prostats.currentPP = prostats.currentPP - 2
+	
+	local toheal = prostats.currentHP + 10 * proskills.heal
+
+	if toheal < prostats.maxHP then
+		prostats.currentHP = toheal
+	else 
+		prostats.currentHP = prostats.maxHP
+	end
+
+	combatTakeDamage()
+
+end
+
+function combatProHarm()
+	math.randomseed(os.time())
+
+	prostats.currentPP = prostats.currentPP - 6
+	
+	local harm = 10 * proskills.harm
+	
+	if combatTarget == "bat" then
+		batstats.currentHP = batstats.currentHP - harm
+		if batstats.currentHP <= 0 then
+			view = "game"
+			prostats.scrap = prostats.scrap + 20 -- yes, you get more scrap with a harm kill
+			prostats.shield = 0
+		else 
+			combatTakeDamage()
+		end
+	end
+	
+	if combatTarget == "rat" then
+		ratstats.currentHP = ratstats.currentHP - harm
+		if ratstats.currentHP <= 0 then
+			view = "game"
+			prostats.scrap = prostats.scrap + 30  -- see above
+			prostats.shield = 0
+		else
+			combatTakeDamage()
+		end
+	end
+
+end
+
+function combatProShield()
+
+	prostats.shield = proskills.shield + 1
+		
+	if combatTarget == "bat" then
+		prostats.shield = prostats.shield - 1
+	end
+		
+	if combatTarget == "rat" then
+		prostats.shield = prostats.shield - 1
+	end
+	
+	combatMenu = "top"
+	combatselect = 1
+	combatskillselect = 1
+	
+end
+
+function combatDealDamage()
+
+	local damage = math.random(5,10) + prostats.weapon + 0.5 * prostats.speed
+
+	if combatTarget == "bat" then
+		batstats.currentHP = batstats.currentHP - damage
+		if batstats.currentHP <= 0 then 
+			combatCleanup()
+		end
+	end
+	
+	if combatTarget == "rat" then
+		ratstats.currentHP = ratstats.currentHP - damage
+		if ratstats.currentHP <= 0 then
+			combatCleanup()
+		end
+	end
+	
+
+end
+
+
+function combatTakeDamage()
+
+	if prostats.shield > 0 then
+		prostats.shield = prostats.shield - 1
+	
+	elseif combatTarget == "bat" then
+		prostats.currentHP = prostats.currentHP - math.random(1,5)
+		if batstats.currentHP < 10 then
+			batstats.currentHP = batstats.currentHP + 1
+		end
+			
+	elseif combatTarget == "rat" then
+		prostats.currentHP = prostats.currentHP - math.random(5,10)
+		
+	end
+	
+	if prostats.currentHP <= 0 then
+		view = "gameover"
+	end
+	
+	combatMenu = "top"
+	combatselect = 1
+	combatskillselect = 1
+
+end
+
+function combatCleanup()
+
+	if combatTarget == "bat" then
+		prostats.scrap = prostats.scrap + 10
+	elseif combatTarget == "rat" then
+		prostats.scrap = prostats.scrap + 20
+	end
+	
+	combatTarget = "empty"
+	
+	prostats.shield = 0
+	combatMenu = "top"
+	combatselect = 1
+	combatskillselect = 1
+	
+	view = "game"
 end
 
 function viewCombat()
@@ -316,22 +440,29 @@ function viewCombat()
 	end
 	
 	love.graphics.draw(combatBorder,0,0) -- draw the border for the screen
-	love.graphics.print(combatpicktarget,300,100) -- what's going on with who shows up?
+
+--	love.graphics.print(combatpicktarget,300,100) -- what's going on with who shows up?
 	
-	-- draw the menu options
-	love.graphics.print("Fight",200,400)
-	love.graphics.print("Intimidate",400,400)
-	
-	-- draw the menu selector
-	if combatMenu == "fight" then
-		love.graphics.draw(combatSelector,150,400)
-	elseif combatMenu == "intimidate" then
-		love.graphics.draw(combatSelector,350,400)
+
+	if combatMenu == "top" then 
+		love.graphics.print("Fight",64,350)
+		love.graphics.print("Skill",264,350)
+		love.graphics.print("Intimidate",464,350)
+		love.graphics.draw(menuSelector,32 + 200 * (combatselect - 1),353)
 	end
 	
-	-- draw hit points and power points
+	if combatMenu == "skill" then
+		love.graphics.print("Heal",64,350)
+		love.graphics.print("Harm",264,350)
+		love.graphics.print("Shield",464,350)
+		love.graphics.draw(menuSelector,32 + 200 * (combatselectskill - 1),353)
+	end
+	
+	
+	-- show hit points and power points and shield level (make this better presentation later)
 	love.graphics.print(prostats.currentHP,32,450)
-	love.graphics.print(prostats.currentPP,64,450)
+	love.graphics.print(prostats.currentPP,82,450)
+	love.graphics.print(prostats.shield,132,450)
 	
 	if combatTarget == "bat" then
 		love.graphics.print(batstats.currentHP,32,32)

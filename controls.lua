@@ -200,7 +200,7 @@ function keysGame(key)
 			subkey = "scrapAttributes"
 			
 		elseif key == "up" then
-			if menuYNcursor == 2
+			if menuYNcursor == 2 then
 				menuYNcursor = 1
 			end
 		
@@ -214,11 +214,12 @@ function keysGame(key)
 				subkey = "scrapAttributes"
 			elseif menuYNcursor == 2 then
 				if prostats.weapon < prostats.weaponmax then
-					if prostats.scrap >= (prostats.weapon + 1) * 1000
+					if prostats.scrap >= (prostats.weapon + 1) * 1000 then
 						prostats.weapon = prostats.weapon + 1
 					end
 				end
 			end
+		end
 				
 	elseif subkey == "scrapSkills" then
 		if key == "escape" then
@@ -249,23 +250,76 @@ function keysGame(key)
 end
 
 function keysCombat(key)
-	if key == "escape" then
+--[[	if key == "escape" then
 		love.event.quit()
 	end
+--]]
 	
-	if combatMenu == "fight" then
-		if key == "return" then
-			combatProAttack()
-		elseif key == "right" then
-			combatMenu = "intimidate"
+	if combatMenu == "top" then
+		if key == "right" then
+			if combatselect < 3 then
+				combatselect = combatselect + 1
+			end
 		end
-	end
+		
+		if key == "left" then
+			if combatselect > 1 then
+				combatselect = combatselect - 1
+			end
+		end
 	
-	if combatMenu == "intimidate" then
 		if key == "return" then
-			combatProScare()
-		elseif key == "left" then
-			combatMenu = "fight"
+			if combatselect == 1 then
+				combatProAttack()
+			
+			elseif combatselect == 2 then
+				combatMenu = "skill"
+				
+			elseif combatselect == 3 then
+				combatProScare()
+			end
+		end
+	
+	
+	elseif combatMenu == "skill" then
+
+		if key == "escape" then
+			combatMenu = "top"
+		end
+
+
+		if key == "right" then
+			if combatselectskill < 3 then
+				combatselectskill = combatselectskill + 1
+			end
+		end
+		
+	
+		if key == "left" then
+			if combatselectskill > 1 then
+				combatselectskill = combatselectskill - 1
+			end
+		end
+
+		
+		if key == "return" then
+			if combatselectskill == 1 then
+				if prostats.currentPP >= 2 then
+					combatProHeal()
+				end
+			elseif combatselectskill == 2 then
+				if prostats.currentPP >= 6 then
+					if proskills.harm > 0 then
+						combatProHarm()
+					end
+				end
+			elseif combatselectskill == 3 then
+				if prostats.currentPP >= 4 then
+					if proskills.shield > 0 then
+						combatProShield()
+					end
+				end
+			end
 		end
 	end
 	
