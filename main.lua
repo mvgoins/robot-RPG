@@ -30,7 +30,7 @@ combatselectskill = 1
 
 gameMaincursor = 1 -- blehhhhh these shouldn't be global
 gameItemcursor = 1
-gameSkillscursor = 1
+gameSkillcursor = 1
 gameScrapcursor = 1
 
 scrapPPcursor = 1
@@ -39,13 +39,47 @@ scrapSkillcursor = 1
 
 menuYNcursor = 1
 
+gameStatusMessage = nil
+
 -- stats
-prostats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10, ["scrap"]=0, ["weapon"] = 0, ["weaponmax"] = 3, ["armor"] = 0, ["armormax"] = 3, ["speed"] = 0, ["speedmax"] = 3, ["shield"] = 0} -- trying string keys 
-proskills = {["heal"] = 1, ["harm"] = 0, ["shield"] = 0} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
-proinventory = {["bluekey"] = "no", ["weapon"] = "no", ["armor"] = "no", ["speed"] = "no"}
+prostats = {
+			["currentHP"] = 100, 
+			["maxHP"] = 100, 
+			["currentPP"] = 10, 
+			["maxPP"]=10, 
+			["scrap"]=0, 
+			["weapon"] = 3, 
+			["weaponmax"] = 3, 
+			["armor"] = 2, 
+			["armormax"] = 3, 
+			["speed"] = 1, 
+			["speedmax"] = 3, 
+			["shield"] = 0, 
+			["pp1"] = 10, 
+			["pp2"] = 1,
+			}  
+			
+proskills = {
+			["heal"] = 1, 
+			["harm"] = 1, 
+			["shield"] = 1,
+			} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
+			
+proinventory = {
+			["bluekey"] = "no", 
+			["weapon"] = "no", 
+			["armor"] = "no", 
+			["speed"] = "no",
+			}
+			
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
 ratstats = {["currentHP"] = 30, ["maxHP"] = 30}
 bossstats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10 }
+
+-- colors in rgba tables
+colorwhite = {255, 255, 255}
+colorgrey = {192, 192, 192}
+colordarkgrey = {82, 82, 82}
 
 function love.load()
 	love.window.setMode(640,480)
@@ -66,16 +100,19 @@ end -- end viewTitle
 
 function viewGame() -- the main view of the map/dungeon
 
+local mbX = 32
+local mbY = 250
+
 	-- draw the terrain
 	for y = -5,5 do
 		currentY = proloc[2] + y
-		if floor1_terrain[currentY] then
+		if dungeon_terrain[proloc[3]][currentY] then
 			for x = -5,5 do
 				currentX = proloc[1] + x
-				if floor1_terrain[currentY][currentX] then
-					if floor1_terrain[currentY][currentX] == 0 then
+				if dungeon_terrain[proloc[3]][currentY][currentX] then
+					if dungeon_terrain[proloc[3]][currentY][currentX] == 0 then
 						love.graphics.draw(dungeon_wall,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif floor1_terrain[currentY][currentX] == 1 then
+					elseif dungeon_terrain[proloc[3]][currentY][currentX] == 1 then
 						love.graphics.draw(dungeon_floor,16 + 32 * (x + 5),16 + 32 * (y + 5))
 					end
 				end
@@ -86,28 +123,28 @@ function viewGame() -- the main view of the map/dungeon
 	-- draw terrain features (treasure chests, portals, et cetera)
 	for y = -5,5 do
 		currentY = proloc[2] + y
-		if floor1_features[currentY] then
+		if dungeon_features[proloc[3]][currentY] then
 			for x = -5,5 do
 				currentX = proloc[1] + x
 				
-				if floor1_features[currentY][currentX] then
-					if floor1_features[currentY][currentX] == 1 then
+				if dungeon_features[proloc[3]][currentY][currentX] then
+					if dungeon_features[proloc[3]][currentY][currentX] == 1 then
 						love.graphics.draw(stairsDown,16 + 32 * (x + 5),16 + 32 * (y + 5))
 
-					elseif floor1_features[currentY][currentX] == 2 then
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 2 then
 						love.graphics.draw(stairsUp,16 + 32 * (x + 5),16 + 32 * (y + 5))
 
-					elseif floor1_features[currentY][currentX] == 3 then
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 3 then
 						love.graphics.draw(treasure1,16 + 32 * (x + 5),16 + 32 * (y + 5))
 
-					elseif floor1_features[currentY][currentX] == 4 then
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 4 then
 						love.graphics.draw(treasure2,16 + 32 * (x + 5),16 + 32 * (y + 5))
 
-					elseif floor1_features[currentY][currentX] == 5 then
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 5 then
 						love.graphics.draw(healPod3,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif floor1_features[currentY][currentX] == 6 then
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 6 then
 						love.graphics.draw(healPod2,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif floor1_features[currentY][currentX] == 7 then
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 7 then
 						love.graphics.draw(healPod1,16 + 32 * (x + 5),16 + 32 * (y + 5))
 					end
 				end
@@ -118,6 +155,10 @@ function viewGame() -- the main view of the map/dungeon
 	love.graphics.draw(screenborder1,0,0) -- draw a border around the map
 		
 	love.graphics.draw(proface, 16 + 32 * 5,16 + 32 * 5) -- draw the character
+	
+	if gameStatusMessage then
+		love.graphics.print(gameStatusMessage,32,400)
+	end
 	
 	
 	if subkey == "none" then -- draw the normal stats you see
@@ -160,18 +201,31 @@ function viewGame() -- the main view of the map/dungeon
 	
 	
 	elseif subkey == "mainSkills" then
-		love.graphics.print("Skills...",416,82)
-	
+		love.graphics.print("Heal",416,82)
+		love.graphics.print("Harm",416,132)
+		love.graphics.print("Shield",416,182)
+
+		love.graphics.draw(menuSelector,396,85 + 50 * (gameSkillcursor - 1))	
 	
 	-- scrap submenu
 	elseif subkey == "scrapPP" then
-		love.graphics.printf("Turn scrap into power?",416,32,200,"center")
+		love.graphics.printf("Turn "..prostats.pp1.." scrap into "..prostats.pp2.." power?",416,32,200,"center")
 		love.graphics.print("No",416,132)
-		love.graphics.print("Yes",416,182)
+	
+		if prostats.currentPP < prostats.maxPP and prostats.scrap >= 10 then
+			love.graphics.print("Yes",416,182)
+		else
+			love.graphics.setColor(colordarkgrey)
+			love.graphics.print("Yes",416,182)
+			love.graphics.setColor(colorwhite)
+		end
 		
+	
 		love.graphics.draw(menuSelector,396,135 + 50 * (scrapPPcursor - 1))
 	
-	
+		love.graphics.print("Scrap: "..prostats.scrap,416,282)
+		love.graphics.print("Power: "..prostats.currentPP.."/"..prostats.maxPP,416,332)
+		
 	elseif subkey == "scrapAttributes" then
 		love.graphics.print("Upgrade attribute?",416,32)
 		love.graphics.print("Weapon: "..prostats.weapon.."/"..prostats.weaponmax,416,132)
@@ -181,6 +235,77 @@ function viewGame() -- the main view of the map/dungeon
 		love.graphics.draw(menuSelector,396,135 + 50 * (scrapAttcursor - 1))
 	
 	
+	elseif subkey == "weaponCheck" then
+		local nextwep = prostats.weapon + 1
+		local nextwepcost = nextwep * 1000
+		
+		if prostats.weapon < prostats.weaponmax then
+			love.graphics.printf("Upgrade weapon for "..nextwepcost.." scrap?",416,32,200,"center")
+
+			love.graphics.print("No",416,132)
+		
+			if prostats.scrap >= nextwepcost then
+				love.graphics.print("Yes",416,182)
+			else
+				love.graphics.setColor(colordarkgrey)
+				love.graphics.print("Yes",416,182)
+				love.graphics.setColor(colorwhite)
+			end
+		
+			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+	
+		else
+			love.graphics.print("Weapons are maxed!",416,32)
+		end
+	
+	elseif subkey == "armorCheck" then
+		local nextarm = prostats.armor + 1
+		local nextarmcost = nextarm * 1000
+		
+		if prostats.armor < prostats.armormax then
+			love.graphics.printf("Upgrade armor for "..nextarmcost.." scrap?",416,32,200,"center")
+
+			love.graphics.print("No",416,132)
+
+		
+			if prostats.scrap >= nextarmcost then
+				love.graphics.print("Yes",416,182)
+			else
+				love.graphics.setColor(colordarkgrey)
+				love.graphics.print("Yes",416,182)
+				love.graphics.setColor(colorwhite)
+			end
+		
+			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+		
+		else
+			love.graphics.print("Armor is maxed!",416,32)
+		end
+
+	elseif subkey == "speedCheck" then
+		local nextspd = prostats.speed + 1
+		local nextspdcost = nextspd * 1000
+		
+		if prostats.speed < prostats.speedmax then
+			love.graphics.printf("Upgrade speed for "..nextspdcost.." scrap?",416,32,200,"center")
+
+			love.graphics.print("No",416,132)
+
+		
+			if prostats.scrap >= nextspdcost then
+				love.graphics.print("Yes",416,182)
+			else
+				love.graphics.setColor(colordarkgrey)
+				love.graphics.print("Yes",416,182)
+				love.graphics.setColor(colorwhite)
+			end
+		
+			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+		
+		else
+			love.graphics.print("Speed is maxed!",416,32)
+		end
+
 	elseif subkey == "scrapSkills" then
 		love.graphics.print("Upgrade skill?",416,32)
 		love.graphics.print("Heal  : "..proskills.heal.."/2",416,132)
@@ -188,44 +313,122 @@ function viewGame() -- the main view of the map/dungeon
 		love.graphics.print("Shield: "..proskills.shield.."/2",416,232)
 		
 		love.graphics.draw(menuSelector,396,135 + 50 * (scrapSkillcursor - 1))
-	
-	
-	elseif subkey == "weaponCheck" then
-		local nextwep = prostats.weapon + 1
-		local nextwepcost = nextwep * 1000
-		love.graphics.printf("Upgrade weapon?",416,32,200,"center")
-		love.graphics.print("Weapon "..prostats.weapon.." to "..nextwep.." is "..nextwepcost.." scrap.",416,82)
-		love.graphics.print("No",416,132)
-		love.graphics.print("Yes",416,182)
 		
-		love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
-	
-	
-	elseif subkey == "armorCheck" then
-	
-	
-	
-	elseif subkey == "speedCheck" then
-	
-	
-	
 	elseif subkey == "healCheck" then
-	
+		local nextheal = proskills.heal + 1
+		local nextcost = (proskills.heal + 1) * 1500
+		
+		if proskills.heal < 2 then
+			love.graphics.printf("Upgrade Heal for "..nextcost.." scrap?",416,32,200,"center")
+
+			love.graphics.print("No",416,132)
+
+		
+			if prostats.scrap >= nextcost then
+				love.graphics.print("Yes",416,182)
+			else
+				love.graphics.setColor(colordarkgrey)
+				love.graphics.print("Yes",416,182)
+				love.graphics.setColor(colorwhite)
+			end
+		
+			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+		
+		else
+			love.graphics.print("Heal is maxed!",416,32)
+		end	
 	
 	
 	elseif subkey == "harmCheck" then
-	
+		local nextharm = proskills.harm + 1
+		local nextcost = (proskills.harm + 1) * 1500
+		
+		if proskills.harm < 2 then
+			love.graphics.printf("Upgrade Harm for "..nextcost.." scrap?",416,32,200,"center")
+
+			love.graphics.print("No",416,132)
+
+		
+			if prostats.scrap >= nextcost then
+				love.graphics.print("Yes",416,182)
+			else
+				love.graphics.setColor(colordarkgrey)
+				love.graphics.print("Yes",416,182)
+				love.graphics.setColor(colorwhite)
+			end
+		
+			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+		
+		else
+			love.graphics.print("Harm is maxed!",416,32)
+		end		
 	
 	
 	elseif subkey == "shieldCheck" then
+		local nextshield = proskills.shield + 1
+		local nextcost = (proskills.shield + 1) * 1500
+		
+		if proskills.shield < 2 then
+			love.graphics.printf("Upgrade Shield for "..nextcost.." scrap?",416,32,200,"center")
+
+			love.graphics.print("No",416,132)
+
+		
+			if prostats.scrap >= nextcost then
+				love.graphics.print("Yes",416,182)
+			else
+				love.graphics.setColor(colordarkgrey)
+				love.graphics.print("Yes",416,182)
+				love.graphics.setColor(colorwhite)
+			end
+		
+			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
+		
+		else
+			love.graphics.print("Heal is maxed!",416,32)
+		end	
 	
-	end -- end the whole damn menu drawing stack
+	end -- end the whole damn scrapview drawing stack
 	
 end -- end viewGame
 
-function featureCheck() -- see if the player is on a feature, and do something if they are
+function skillHealCheck()
+	if prostats.currentPP >= 2 and prostats.currentHP < prostats.maxHP then
+		prostats.currentPP = prostats.currentPP - 2
+	
+		local toheal = prostats.currentHP + 10 * proskills.heal
 
+		if toheal < prostats.maxHP then
+			prostats.currentHP = toheal
+			gameStatusMessage = "Healed "..toheal.." HP."
+		else 
+			prostats.currentHP = prostats.maxHP
+			gameStatusMessage = "HP fully restored."
+		end
+	
+	elseif prostats.currentPP < 2 then
+		gameStatusMessage = "Not enough power."
+	
+	elseif prostats.currentHP == prostats.maxHP then
+		gameStatusMessage = "HP already at maximum."
+	end	
 end
+
+function skillHarmCheck()
+	gameStatusMessage = "There's nothing to use that on here."
+end
+
+function skillShieldCheck()
+	gameStatusMessage = "There's no need for that now."
+end
+
+
+--taking a break! pick back up here
+--function featureCheck() -- see if the player is on a feature, and do something if they are
+
+--	if dungeon_feature[proloc[3]][proloc[2]][proloc[1]] == 
+
+--end 
 
 function combatCheck() -- begin the check to see if a random encounter happens -- but it's all combat, I guess? rework for later iteration of the game
 	math.randomseed(os.time()) -- make things more random -- hopefully
@@ -342,6 +545,7 @@ end
 function combatProShield()
 
 	prostats.shield = proskills.shield + 1
+	prostats.currentPP = prostats.currentPP - 4
 		
 	if combatTarget == "bat" then
 		prostats.shield = prostats.shield - 1
