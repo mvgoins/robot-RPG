@@ -40,6 +40,9 @@ scrapSkillcursor = 1
 menuYNcursor = 1
 
 gameStatusMessage = nil
+combatStatusMessage1 = nil
+combatStatusMessage2 = nil
+combatMessageCounter = 0
 
 -- stats
 prostats = {
@@ -48,11 +51,11 @@ prostats = {
 			["currentPP"] = 10, 
 			["maxPP"]=10, 
 			["scrap"]=0, 
-			["weapon"] = 3, 
+			["weapon"] = 0, 
 			["weaponmax"] = 3, 
-			["armor"] = 2, 
+			["armor"] = 0, 
 			["armormax"] = 3, 
-			["speed"] = 1, 
+			["speed"] = 0, 
 			["speedmax"] = 3, 
 			["shield"] = 0, 
 			["pp1"] = 10, 
@@ -61,20 +64,28 @@ prostats = {
 			
 proskills = {
 			["heal"] = 1, 
-			["harm"] = 1, 
-			["shield"] = 1,
+			["harm"] = 0, 
+			["shield"] = 0,
 			} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
 			
-proinventory = {
+proitems = {
 			["bluekey"] = "no", 
 			["weapon"] = "no", 
 			["armor"] = "no", 
 			["speed"] = "no",
+			["battery"] = "no",
+			["factory"] = "no",
+			["steel"] = "no"
 			}
 			
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
 ratstats = {["currentHP"] = 30, ["maxHP"] = 30}
 bossstats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10 }
+
+healPads = {
+			{8,16,1,50},
+			{23,4,1,50},
+			}
 
 -- colors in rgba tables
 colorwhite = {255, 255, 255}
@@ -83,6 +94,24 @@ colordarkgrey = {82, 82, 82}
 
 function love.load()
 	love.window.setMode(640,480)
+	print(love.math.random(1,100))
+	print(love.math.random(1,100))
+	print(love.math.random(1,100))
+end
+
+function love.update(dt)
+	
+	if combatMenu == "messages" then
+		combatMessageCounter = combatMessageCounter + dt
+		
+		if combatMessageCounter >= 2 then -- display messages for 2 seconds
+			combatMenu = "top"
+			combatMessageCounter = 0
+			combatStatusMessage1 = nil
+			combatStatusMessage2 = nil
+		end
+	end
+
 end
 
 function viewTitle() -- the title/start screen
@@ -128,6 +157,17 @@ local mbY = 250
 				currentX = proloc[1] + x
 				
 				if dungeon_features[proloc[3]][currentY][currentX] then
+				--[[ 1: stairs down
+				 	 2: stairs up
+				 	 3: regular chest
+				 	 4: cyber chest
+				 	 5: charged heal pad
+				 	 6: half-charged heal pad
+				 	 7: drained heal pad
+					 8: stone door
+					 9: cyber door
+				 --]]	 
+				 	 
 					if dungeon_features[proloc[3]][currentY][currentX] == 1 then
 						love.graphics.draw(stairsDown,16 + 32 * (x + 5),16 + 32 * (y + 5))
 
@@ -146,6 +186,8 @@ local mbY = 250
 						love.graphics.draw(healPod2,16 + 32 * (x + 5),16 + 32 * (y + 5))
 					elseif dungeon_features[proloc[3]][currentY][currentX] == 7 then
 						love.graphics.draw(healPod1,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif dungeon_features[proloc[3]][currentY][currentX] == 8 then
+						love.graphics.draw(rock,16 + 32 * (x + 5),16 + 32 * (y + 5))
 					end
 				end
 			end
@@ -400,7 +442,7 @@ function skillHealCheck()
 
 		if toheal < prostats.maxHP then
 			prostats.currentHP = toheal
-			gameStatusMessage = "Healed "..toheal.." HP."
+			gameStatusMessage = "Healed "..10 * proskills.heal.." HP."
 		else 
 			prostats.currentHP = prostats.maxHP
 			gameStatusMessage = "HP fully restored."
@@ -415,7 +457,29 @@ function skillHealCheck()
 end
 
 function skillHarmCheck()
-	gameStatusMessage = "There's nothing to use that on here."
+	
+	local floor = proloc[3]
+	
+	if prostats.currentPP >= 6 then 
+		if dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] == 8 
+			or dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]] == 8
+			or dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1] == 8
+ 			or dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] == 8 then
+ 			
+ 			for y = -1,1 do -- so right now this destroys everything around the player if one of the things is a rock
+ 				for x = -1,1 do -- that's.. not great! but there's no actual case where it matters so I'm running with it
+ 					dungeon_features[floor][proloc[2] + y][proloc[1] + x] = 0
+ 				end
+ 			end
+ 			gameStatusMessage = "You removed the rock."
+ 			prostats.currentPP = prostats.currentPP - 6
+ 		else
+ 			gameStatusMessage = "There's nothing to use that on here."
+ 		end
+ 	else
+		gameStatusMessage = "You don't have enough power."
+	end
+	
 end
 
 function skillShieldCheck()
@@ -423,19 +487,132 @@ function skillShieldCheck()
 end
 
 
---taking a break! pick back up here
---function featureCheck() -- see if the player is on a feature, and do something if they are
+function featureCheck() -- see if the player is on a feature, and do something if they are
 
---	if dungeon_feature[proloc[3]][proloc[2]][proloc[1]] == 
+	local floor = proloc[3]
+	local here = dungeon_features[proloc[3]][proloc[2]][proloc[1]]
+	
+	print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
+	print("Here is: "..here)
+	
+	if here == 0 then
+		gameStatusMessage = "Nothing interesting here."
+		print("nothing")
+		print(" ")
+	elseif here == 1 then
+		proloc[3] = proloc[3] + 1
+		print("stairs down")
+	elseif here == 2 then
+		proloc[3] = proloc[3] - 1
+		print("stairs up")
+	elseif here == 3 then -- there has got to be a better way to do this
+	print("treasure")
+		if floor == 1 then -- 1st floor treasures
+		print("on floor 1")
+			if proloc[2] == 29 and proloc[1] == 3 then
+				print("1st treasure")
+				gameStatusMessage = "You found 1000 scrap."
+				prostats.scrap = prostats.scrap + 1000
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0 -- that's the direct, can't we use an alias?
+				print("Here is now: "..here)
 
---end 
+			elseif proloc[2] == 23 and proloc[1] == 3 then
+				gameStatusMessage = "You found 750 scrap."
+				prostats.scrap = prostats.scrap + 750
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+				
+			elseif proloc[2] == 23 and proloc[1] == 19 then
+				gameStatusMessage = "You found 500 scrap."
+				prostats.scrap = prostats.scrap + 500
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+				
+			elseif proloc[2] == 13 and proloc[1] == 25 then
+				gameStatusMessage = "You found some schematics. Your maximum speed increases."
+				prostats.speedmax = 5
+				proitems.speed = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+			
+			elseif proloc[2] == 27 and proloc[1] == 24 then
+				gameStatusMessage = "You found a battery upgrade. Your maximum power increases."
+				prostats.maxPP = 20
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+				proitems.battery = "yes"
+			end
+					
+		elseif floor == 2 then
+		
+		end -- end regular treasure
+		
+	-- elseif here == 4 then -- note: cyber chests.
+	
+	elseif here == 5 then
+		--print("healing pad")
+		if prostats.currentHP == prostats.maxHP then
+			gameStatusMessage = "You are currently undamaged."
+		elseif prostats.currentHP + 50 < prostats.maxHP then
+			prostats.currentHP = prostats.currentHP + 50
+			
+			for i,v in ipairs(healPads) do
+				if healPads[i][1] == proloc[1] and healPads[i][2] == proloc[2] and healPads[i][3] == proloc[3] then
+					healPads[i][4] = 0
+				end
+			end
+			
+			dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 7
+
+			if prostats.currentHP >= math.floor(prostats.maxHP * 0.9) then -- if you're at 90% health, a different message
+				gameStatusMessage = "Most of your damage is repaired."
+			else
+				gameStatusMessage = "Some of your damage is repaired."
+			end
+		else
+			gameStatusMessage = "All of your damage is repaired."
+			prostats.currentHP = prostats.maxHP
+
+			for i,v in ipairs(healPads) do
+				if healPads[i][1] == proloc[1] and healPads[i][2] == proloc[2] and healPads[i][3] == proloc[3] then
+					healPads[i][4] = 0
+				end
+			end	
+			dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 7
+
+		end
+		
+	elseif here == 6 or here == 7 then
+		print("not yet")
+		gameStatusMessage = "The heal pad isn't recharged yet."
+	
+	end		
+	-- note: no check for 8 or 9, since those block movement and cannot be stood on. use custom messages for those.
+	
+end -- ending featureCheck()
+
+function healPadRegen()
+local padnum = 0
+	for i,v in ipairs(healPads) do
+		padnum = padnum + 1
+		print("checking pad "..padnum)
+		if healPads[i][4] < 50 then
+			healPads[i][4] = healPads[i][4] + 1
+			print("Pad "..padnum.." + 1!")
+		end
+			
+		if healPads[i][4] >= 25 and healPads[i][4] < 50 then
+			dungeon_features[healPads[i][3]][healPads[i][2]][healPads[i][1]] = 6
+			
+		elseif healPads[i][4] == 50 then
+			dungeon_features[healPads[i][3]][healPads[i][2]][healPads[i][1]] = 5
+		end
+	end
+
+end
 
 function combatCheck() -- begin the check to see if a random encounter happens -- but it's all combat, I guess? rework for later iteration of the game
-	math.randomseed(os.time()) -- make things more random -- hopefully
+--	math.randomseed(os.time()) -- make things more random -- hopefully
 
 	combatCount = combatCount + 1
 	
-	attack = math.random(1,25) + combatCount -- this should be made local later; global now for ease of debugging
+	attack = love.math.random(1,25) + combatCount -- this should be made local later; global now for ease of debugging
 
 	if attack > 49 then
 		keyInput = "frozen" -- I'm not sure if there'd be enough time for someone to hit a key between the time this starts and the time combat actually come sup, but.. might as well freeze the keys just in case
@@ -448,23 +625,23 @@ end -- end combatCheck
 
 
 function combatSelection()
-	math.randomseed(os.time())
-	combatpicktarget = math.random(1,100)
+--	math.randomseed(os.time())
+	combatpicktarget = love.math.random(1,100)
 	
 	if combatpicktarget < 51 then -- should be even distribution, but it is not; check randomness issues
 		combatTarget = "bat"
-		batstats.maxHP = math.random(10,15) -- bats have between 10 and 15 HP
+		batstats.maxHP = love.math.random(10,15) -- bats have between 10 and 15 HP
 		batstats.currentHP = batstats.maxHP
 	elseif combatpicktarget >= 51 then
 		combatTarget = "rat"
-		ratstats.maxHP = math.random(20,30) -- rats have between 20 and 30 HP
+		ratstats.maxHP = love.math.random(20,30) -- rats have between 20 and 30 HP
 		ratstats.currentHP = ratstats.maxHP
 	end
 	
 end -- end combatSelection
 
 function combatProAttack()
-	math.randomseed(os.time())
+--	math.randomseed(os.time())
 	
 	combatDealDamage()
 	
@@ -479,12 +656,14 @@ function combatProAttack()
 		end
 	end
 		
+	combatMenu = "messages"
+	
 end
 
 function combatProScare()
-	math.randomseed(os.time())
+--	math.randomseed(os.time())
 	
-	if math.random(1,100) > 25 then
+	if love.math.random(1,100) > 25 then
 		view = "game"
 		combatTarget = "empty" -- I don't know if this is necessary
 	else 
@@ -495,7 +674,7 @@ function combatProScare()
 end
 
 function combatProHeal()
-	math.randomseed(os.time())
+--	math.randomseed(os.time())
 	
 	prostats.currentPP = prostats.currentPP - 2
 	
@@ -503,8 +682,10 @@ function combatProHeal()
 
 	if toheal < prostats.maxHP then
 		prostats.currentHP = toheal
+		combatStatusMessage1 = "You repaired "..toheal.." damage."
 	else 
 		prostats.currentHP = prostats.maxHP
+		combatStatusMessage1 = "You healed all your damage."
 	end
 
 	combatTakeDamage()
@@ -512,7 +693,7 @@ function combatProHeal()
 end
 
 function combatProHarm()
-	math.randomseed(os.time())
+--	math.randomseed(os.time())
 
 	prostats.currentPP = prostats.currentPP - 6
 	
@@ -522,7 +703,7 @@ function combatProHarm()
 		batstats.currentHP = batstats.currentHP - harm
 		if batstats.currentHP <= 0 then
 			view = "game"
-			prostats.scrap = prostats.scrap + 20 -- yes, you get more scrap with a harm kill
+			prostats.scrap = prostats.scrap + 20 -- you get more scrap with Harm
 			prostats.shield = 0
 		else 
 			combatTakeDamage()
@@ -555,7 +736,9 @@ function combatProShield()
 		prostats.shield = prostats.shield - 1
 	end
 	
-	combatMenu = "top"
+	combatStatusMessage1 = "You put up an energy field and the enemy attacks."
+	combatStatusMessage2 = "You have "..prostats.shield.." shield points remaining."
+	combatMenu = "messages"
 	combatselect = 1
 	combatskillselect = 1
 	
@@ -563,7 +746,9 @@ end
 
 function combatDealDamage()
 
-	local damage = math.random(5,10) + prostats.weapon + 0.5 * prostats.speed
+--	math.randomseed(os.time())
+
+	local damage = love.math.random(5,10) + prostats.weapon + math.ceil(0.5 * prostats.speed) -- need something different for speed
 
 	if combatTarget == "bat" then
 		batstats.currentHP = batstats.currentHP - damage
@@ -579,24 +764,38 @@ function combatDealDamage()
 		end
 	end
 	
+	combatStatusMessage1 = "You dealt "..damage.." to the enemy."
 
 end
 
 
 function combatTakeDamage()
 
+--	math.randomseed(os.time())
+
 	if prostats.shield > 0 then
 		prostats.shield = prostats.shield - 1
 	
 	elseif combatTarget == "bat" then
-		prostats.currentHP = prostats.currentHP - math.random(1,5)
-		if batstats.currentHP < 10 then
-			batstats.currentHP = batstats.currentHP + 1
+		local batdamage = love.math.random(1,5) - prostats.armor
+		if batdamage > 0 then
+			prostats.currentHP = prostats.currentHP - batdamage
+			combatStatusMessage2 = "The bat did "..batdamage.." damage."
+			if batstats.currentHP < 10 then
+				batstats.currentHP = batstats.currentHP + batdamage -- drain health!
+			end
+		else
+			combatStatusMessage2 = "Your armor blocked the bat."
 		end
-			
-	elseif combatTarget == "rat" then
-		prostats.currentHP = prostats.currentHP - math.random(5,10)
 		
+	elseif combatTarget == "rat" then
+		local ratdamage = love.math.random(5,10) - prostats.armor
+		if ratdamage > 0 then
+			prostats.currentHP = prostats.currentHP - ratdamage
+			combatStatusMessage2 = "The rat did "..ratdamage.." damage."
+		else
+			combatStatusMessage2 = "Your armor blocked the rat."
+		end		
 	end
 	
 	if prostats.currentHP <= 0 then
@@ -644,6 +843,7 @@ function viewCombat()
 	end
 	
 	love.graphics.draw(combatBorder,0,0) -- draw the border for the screen
+	
 
 --	love.graphics.print(combatpicktarget,300,100) -- what's going on with who shows up?
 	
@@ -653,13 +853,16 @@ function viewCombat()
 		love.graphics.print("Skill",264,350)
 		love.graphics.print("Intimidate",464,350)
 		love.graphics.draw(menuSelector,32 + 200 * (combatselect - 1),353)
-	end
-	
-	if combatMenu == "skill" then
+		
+	elseif combatMenu == "skill" then
 		love.graphics.print("Heal",64,350)
 		love.graphics.print("Harm",264,350)
 		love.graphics.print("Shield",464,350)
 		love.graphics.draw(menuSelector,32 + 200 * (combatselectskill - 1),353)
+	
+	elseif combatMenu == "messages" then
+		love.graphics.print(combatStatusMessage1,32,350)
+		love.graphics.print(combatStatusMessage2,32,400)
 	end
 	
 	

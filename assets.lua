@@ -15,6 +15,7 @@ healPod2 = love.graphics.newImage("art/healpod2.png")
 healPod3 = love.graphics.newImage("art/healpod3.png")
 stairsUp = love.graphics.newImage("art/stairsup.png")
 stairsDown = love.graphics.newImage("art/stairsdown.png")
+rock = love.graphics.newImage("art/rock.png")
 
 screenborder1 = love.graphics.newImage("art/screenborder1.png")
 screenborder2 = love.graphics.newImage("art/screenborder2.png")

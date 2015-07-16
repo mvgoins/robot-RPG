@@ -13,15 +13,24 @@ function keysGame(key)
 
 	if subkey == "none" then
 	
+		gameStatusMessage = nil
+		
 		if key == "escape" then
-			love.event.quit()
+			if love.keyboard.isDown("`") then
+				love.event.quit()
+			end
 		end
-	
+		
 		if key == "up" then
 			if dungeon_terrain[proloc[3]][proloc[2] - 1] then
 				if dungeon_terrain[proloc[3]][proloc[2] - 1][proloc[1]] == 1 then
-					proloc[2] = proloc[2] - 1
-					combatCheck()
+					if dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]] ~= 8 and dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]] ~= 9 then
+						proloc[2] = proloc[2] - 1
+						combatCheck()
+						healPadRegen()
+					else
+						gameStatusMessage = "Your way is blocked."
+					end
 				end
 			end
 			proface = protagonist_back
@@ -30,8 +39,13 @@ function keysGame(key)
 		if key == "down" then
 			if dungeon_terrain[proloc[3]][proloc[2] + 1] then
 				if dungeon_terrain[proloc[3]][proloc[2] + 1][proloc[1]] == 1 then
-					proloc[2] = proloc[2] + 1
-					combatCheck()
+					if dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] ~= 8 and dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] ~= 9 then
+						proloc[2] = proloc[2] + 1
+						combatCheck()
+						healPadRegen()
+					else
+						gameStatusMessage = "Your way is blocked."
+					end
 				end
 			end
 			proface = protagonist_front
@@ -40,8 +54,13 @@ function keysGame(key)
 		if key == "left" then
 			if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] - 1] then
 				if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] - 1] == 1 then
-					proloc[1] = proloc[1] - 1
-					combatCheck()
+					if dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] ~= 8 and dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] ~= 9 then
+						proloc[1] = proloc[1] - 1
+						combatCheck()
+						healPadRegen()
+					else
+						gameStatusMessage = "Your way is blocked."					
+					end
 				end
 			end
 			proface = protagonist_left
@@ -50,8 +69,13 @@ function keysGame(key)
 		if key == "right" then
 			if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] + 1] then
 				if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] + 1] == 1 then
-					proloc[1] = proloc[1] + 1
-					combatCheck()
+					if dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1] ~= 8 and dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1] ~= 9 then
+						proloc[1] = proloc[1] + 1
+						combatCheck()
+						healPadRegen()
+					else
+						gameStatusMessage = "Your way is blocked."
+					end					
 				end
 			end
 			proface = protagonist_right
@@ -104,7 +128,8 @@ function keysGame(key)
 		
 		if key == "return" then
 			if gameMaincursor == 1 then
-				subkey = "mainCheck"
+				featureCheck() -- WAS: subkey = "mainCheck"
+				subkey = "none"
 			elseif gameMaincursor == 2 then
 				subkey = "mainSkills"
 			elseif gameMaincursor == 3 then
@@ -181,6 +206,7 @@ function keysGame(key)
 						prostats.currentPP = prostats.currentPP + 1
 						prostats.scrap = prostats.scrap - 10
 						subkey = "mainScrap"
+						scrapPPcursor = 1 -- because otherwise you can keep getting PP once you've gotten down here, even if conditions no longer apply. this should be rewritten to avoid that.
 			end
 		end
 				
@@ -442,20 +468,29 @@ function keysGame(key)
 		
 		elseif key == "return" then
 			if gameSkillcursor == 1 then
-				skillHealCheck()
+				if proskills.heal > 0 then
+					skillHealCheck()
+				else
+					gameStatusMessage = "You don't have that skill."
+				end
+				
 			elseif gameSkillcursor == 2 then
-				skillHarmCheck()
+				if proskills.harm > 0 then
+					skillHarmCheck()
+				else
+					gameStatusMessage = "You don't have that skill."
+				end
+				
 			elseif gameSkillcursor == 3 then
-				skillShieldCheck()
+				if proskills.shield > 0 then
+					skillShieldCheck()
+				else
+					gameStatusMessage = "You don't have that skill."
+				end
 			end
 		end
 
 		
-	elseif subkey == "mainCheck" then -- use terrain feature if possible, or display a message
-		if key == "escape" then
-			subkey = "main"
-		end
-	
 	-- navigate save menu
 	elseif subkey == "mainSave" then
 		if key == "escape" then
@@ -472,7 +507,15 @@ function keysCombat(key)
 	end
 --]]
 	
-	if combatMenu == "top" then
+	if combatMenu == "messages" then
+		if key == "return" then
+			combatMenu = "top"
+			combatMessageCounter = 0
+			combatStatusMessage1 = nil
+			combatStatusMessage2 = nil
+		end
+	
+	elseif combatMenu == "top" then
 		if key == "right" then
 			if combatselect < 3 then
 				combatselect = combatselect + 1
