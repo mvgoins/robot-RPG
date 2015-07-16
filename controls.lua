@@ -23,8 +23,10 @@ function keysGame(key)
 		
 		if key == "up" then
 			if dungeon_terrain[proloc[3]][proloc[2] - 1] then
-				if dungeon_terrain[proloc[3]][proloc[2] - 1][proloc[1]] == 1 then
-					if dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]] ~= 8 and dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]] ~= 9 then
+				local checkupT = dungeon_terrain[proloc[3]][proloc[2] - 1][proloc[1]]
+				if checkupT == 1 or checkupT == 2 or checkupT == 3 or checkupT == 4 or checkupT == 9 then
+					local checkupF = dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]]
+					if checkupF ~= 8 and checkupF ~= 9 then
 						proloc[2] = proloc[2] - 1
 						combatCheck()
 						healPadRegen()
@@ -38,8 +40,10 @@ function keysGame(key)
 	
 		if key == "down" then
 			if dungeon_terrain[proloc[3]][proloc[2] + 1] then
-				if dungeon_terrain[proloc[3]][proloc[2] + 1][proloc[1]] == 1 then
-					if dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] ~= 8 and dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] ~= 9 then
+			local checkupT = dungeon_terrain[proloc[3]][proloc[2] + 1][proloc[1]]
+				if checkupT == 1 or checkupT == 2 or checkupT == 3 or checkupT == 4 or checkupT == 9 then
+					local checkupF = dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]]
+					if checkupF ~= 8 and checkupF ~= 9 then
 						proloc[2] = proloc[2] + 1
 						combatCheck()
 						healPadRegen()
@@ -53,8 +57,10 @@ function keysGame(key)
 	
 		if key == "left" then
 			if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] - 1] then
-				if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] - 1] == 1 then
-					if dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] ~= 8 and dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] ~= 9 then
+			local checkupT = dungeon_terrain[proloc[3]][proloc[2]][proloc[1] - 1]
+				if checkupT == 1 or checkupT == 2 or checkupT == 3 or checkupT == 4 or checkupT == 9 then		
+					local checkupF = dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1]
+					if checkupF ~= 8 and checkupF ~= 9 then
 						proloc[1] = proloc[1] - 1
 						combatCheck()
 						healPadRegen()
@@ -68,8 +74,10 @@ function keysGame(key)
 	
 		if key == "right" then
 			if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] + 1] then
-				if dungeon_terrain[proloc[3]][proloc[2]][proloc[1] + 1] == 1 then
-					if dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1] ~= 8 and dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1] ~= 9 then
+			local checkupT = dungeon_terrain[proloc[3]][proloc[2]][proloc[1] + 1]			
+				if checkupT == 1 or checkupT == 2 or checkupT == 3 or checkupT == 4 or checkupT == 9 then
+					local checkupF = dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1]					
+					if checkupF ~= 8 and checkupF ~= 9 then
 						proloc[1] = proloc[1] + 1
 						combatCheck()
 						healPadRegen()

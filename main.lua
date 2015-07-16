@@ -14,8 +14,9 @@ subtarget = "none" -- what part of the menu you're looking at -- maybe not neces
 gamestate = "none" -- this is "saved" or not, for save game. rename this? actually maybe not necessary at all. have a function check to see if a save file exists
 
 -- check later to see if any of these could be moved/made local 
-proloc = {7,32,1} -- coordinates of the character. x, y, z. 
-proface = protagonist_front -- what direction you're facing. used for the character icon. 
+-- normal start proloc = {7,32,1} -- coordinates of the character. x, y, z. 
+proloc = {30,4,2}
+proface = protagonist_front -- what direction you're facing. used for the character icon. "front" is looking at player.
 combatCount = 0 -- goes up by 1 every step
 attack = 0 -- this needs to be made local later
 combatTarget = "empty" -- what you're going to fight
@@ -28,7 +29,7 @@ combatselect = 1
 combatselectskill = 1
 
 
-gameMaincursor = 1 -- blehhhhh these shouldn't be global
+gameMaincursor = 1 -- blehhhhh these shouldn't be global?
 gameItemcursor = 1
 gameSkillcursor = 1
 gameScrapcursor = 1
@@ -118,12 +119,12 @@ function viewTitle() -- the title/start screen
 	love.graphics.printf("ROBOT QUEST",0,240,640,"center")
 	love.graphics.printf("[N]ew Game",0,300,640,"center")
 
-	-- debug stuff, making sure images load. delete this later
+	--[[ debug stuff, making sure images load. delete this later
 	love.graphics.draw(protagonist_front,0,0)
 	love.graphics.draw(dungeon_floor,64,0)
 	love.graphics.draw(dungeon_wall,96,0)
 	love.graphics.draw(treasure1,0,64)
-	love.graphics.draw(healPod3,64,64)
+	love.graphics.draw(healPad3,64,64) --]]
 	
 end -- end viewTitle
 
@@ -139,10 +140,19 @@ local mbY = 250
 			for x = -5,5 do
 				currentX = proloc[1] + x
 				if dungeon_terrain[proloc[3]][currentY][currentX] then
-					if dungeon_terrain[proloc[3]][currentY][currentX] == 0 then
+					local checkspot = dungeon_terrain[proloc[3]][currentY][currentX]
+					if checkspot == 0 then
 						love.graphics.draw(dungeon_wall,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif dungeon_terrain[proloc[3]][currentY][currentX] == 1 then
+					elseif checkspot == 1 then
 						love.graphics.draw(dungeon_floor,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif checkspot == 2 then
+						love.graphics.draw(floor2,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif checkspot == 3 then
+						love.graphics.draw(floor3,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif checkspot == 4 then
+						love.graphics.draw(floor4,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif checkspot == 9 then
+						love.graphics.draw(floor9,16 + 32 * (x + 5),16 + 32 * (y + 5))					
 					end
 				end
 			end
@@ -168,26 +178,43 @@ local mbY = 250
 					 9: cyber door
 				 --]]	 
 				 	 
-					if dungeon_features[proloc[3]][currentY][currentX] == 1 then
-						love.graphics.draw(stairsDown,16 + 32 * (x + 5),16 + 32 * (y + 5))
+				 	local here = dungeon_features[proloc[3]][currentY][currentX]
+					local drawX = 16 + 32 * (x + 5)
+					local drawY = 16 + 32 * (y + 5)
+					
+					if here == 1 then
+					
+						love.graphics.draw(stairsDown,drawX, drawY)
 
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 2 then
-						love.graphics.draw(stairsUp,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif here == 2 then
+						love.graphics.draw(stairsUp,drawX, drawY)
 
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 3 then
-						love.graphics.draw(treasure1,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif here == 3 then
+						love.graphics.draw(treasure1,drawX, drawY)
 
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 4 then
-						love.graphics.draw(treasure2,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif here == 4 then
+						love.graphics.draw(treasure2,drawX, drawY)
 
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 5 then
-						love.graphics.draw(healPod3,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 6 then
-						love.graphics.draw(healPod2,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 7 then
-						love.graphics.draw(healPod1,16 + 32 * (x + 5),16 + 32 * (y + 5))
-					elseif dungeon_features[proloc[3]][currentY][currentX] == 8 then
-						love.graphics.draw(rock,16 + 32 * (x + 5),16 + 32 * (y + 5))
+					elseif here == 5 then
+						love.graphics.draw(healPad3,drawX, drawY)
+						
+					elseif here == 6 then
+						love.graphics.draw(healPad2,drawX, drawY)
+						
+					elseif here == 7 then
+						love.graphics.draw(healPad1,drawX, drawY)
+						
+					elseif here == 8 then
+						love.graphics.draw(rock,drawX, drawY)
+						
+					elseif here == 9 then
+						love.graphics.draw(door,drawX, drawY)
+
+					elseif here == "S" then
+						love.graphics.draw(shuttle,drawX, drawY)		
+						
+					elseif here == "W" then
+						love.graphics.draw(dungeon_wall,drawX, drawY)			
 					end
 				end
 			end
@@ -590,11 +617,11 @@ end -- ending featureCheck()
 function healPadRegen()
 local padnum = 0
 	for i,v in ipairs(healPads) do
-		padnum = padnum + 1
-		print("checking pad "..padnum)
+		--padnum = padnum + 1
+		--print("checking pad "..padnum)
 		if healPads[i][4] < 50 then
 			healPads[i][4] = healPads[i][4] + 1
-			print("Pad "..padnum.." + 1!")
+		--	print("Pad "..padnum.." + 1!")
 		end
 			
 		if healPads[i][4] >= 25 and healPads[i][4] < 50 then
@@ -702,9 +729,7 @@ function combatProHarm()
 	if combatTarget == "bat" then
 		batstats.currentHP = batstats.currentHP - harm
 		if batstats.currentHP <= 0 then
-			view = "game"
-			prostats.scrap = prostats.scrap + 20 -- you get more scrap with Harm
-			prostats.shield = 0
+			combatCleanup() -- should add combat messages here first
 		else 
 			combatTakeDamage()
 		end
@@ -713,9 +738,7 @@ function combatProHarm()
 	if combatTarget == "rat" then
 		ratstats.currentHP = ratstats.currentHP - harm
 		if ratstats.currentHP <= 0 then
-			view = "game"
-			prostats.scrap = prostats.scrap + 30  -- see above
-			prostats.shield = 0
+			combatCleanup() -- should add combat messages here first
 		else
 			combatTakeDamage()
 		end
@@ -811,9 +834,9 @@ end
 function combatCleanup()
 
 	if combatTarget == "bat" then
-		prostats.scrap = prostats.scrap + 10
+		prostats.scrap = prostats.scrap + 50
 	elseif combatTarget == "rat" then
-		prostats.scrap = prostats.scrap + 20
+		prostats.scrap = prostats.scrap + 100
 	end
 	
 	combatTarget = "empty"
