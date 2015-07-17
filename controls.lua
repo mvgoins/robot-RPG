@@ -398,7 +398,7 @@ function keysGame(key)
 		end
 		
 	elseif subkey == "harmCheck" then
-		local cost = (proskills.harm + 1) * 1000
+		local cost = (proskills.harm + 1) * 1500
 		
 		if key == "escape" then
 			subkey = "scrapSkills"
@@ -427,7 +427,7 @@ function keysGame(key)
 		end
 		
 	elseif subkey == "shieldCheck" then
-		local cost = (proskills.shield + 1) * 1000
+		local cost = (proskills.shield + 1) * 1500
 		
 		if key == "escape" then
 			subkey = "scrapSkills"

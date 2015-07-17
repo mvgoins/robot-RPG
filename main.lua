@@ -14,8 +14,10 @@ subtarget = "none" -- what part of the menu you're looking at -- maybe not neces
 gamestate = "none" -- this is "saved" or not, for save game. rename this? actually maybe not necessary at all. have a function check to see if a save file exists
 
 -- check later to see if any of these could be moved/made local 
--- normal start proloc = {7,32,1} -- coordinates of the character. x, y, z. 
-proloc = {30,4,2}
+
+proloc = {7,31,1} -- coordinates of the character. x, y, z. normal start
+--proloc = {30,4,2} -- second floor stairs
+
 proface = protagonist_front -- what direction you're facing. used for the character icon. "front" is looking at player.
 combatCount = 0 -- goes up by 1 every step
 attack = 0 -- this needs to be made local later
@@ -70,13 +72,13 @@ proskills = {
 			} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
 			
 proitems = {
-			["bluekey"] = "no", 
 			["weapon"] = "no", 
 			["armor"] = "no", 
 			["speed"] = "no",
 			["battery"] = "no",
 			["factory"] = "no",
-			["steel"] = "no"
+			["csteel"] = "no",
+			["key"] = "no", 
 			}
 			
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
@@ -86,6 +88,8 @@ bossstats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]
 healPads = {
 			{8,16,1,50},
 			{23,4,1,50},
+			{28,4,2,50},
+			{11,19,2,50},
 			}
 
 -- colors in rgba tables
@@ -226,7 +230,7 @@ local mbY = 250
 	love.graphics.draw(proface, 16 + 32 * 5,16 + 32 * 5) -- draw the character
 	
 	if gameStatusMessage then
-		love.graphics.print(gameStatusMessage,32,400)
+		love.graphics.printf(gameStatusMessage,0,400,624,"center")
 	end
 	
 	
@@ -253,6 +257,35 @@ local mbY = 250
 			love.graphics.draw(menuSelector,396, 335)
 		end
 
+	elseif subkey == "mainItems" then
+	
+		if proitems.weapon == "yes" then
+			love.graphics.print("W-Plans",416,32)
+		end
+		
+		if proitems.armor == "yes" then
+			love.graphics.print("A-Plans",416,82)
+		end
+		
+		if proitems.speed == "yes" then
+			love.graphics.print("S-Plans",416,132)
+		end
+		
+		if proitems.battery == "yes" then
+			love.graphics.print("Battery",416,182)
+		end
+		
+		if proitems.factory == "yes" then
+			love.graphics.print("Factory",416,232)
+		end
+		
+		if proitems.csteel == "yes" then
+			love.graphics.print("C-Steel",416,282)
+		end
+		
+		if proitems.key == "yes" then
+			love.graphics.print("Key",416,332)
+		end
 	
 	elseif subkey == "mainScrap" then
 		love.graphics.print("Restore PP",416,82)
@@ -524,24 +557,17 @@ function featureCheck() -- see if the player is on a feature, and do something i
 	
 	if here == 0 then
 		gameStatusMessage = "Nothing interesting here."
-		print("nothing")
-		print(" ")
 	elseif here == 1 then
 		proloc[3] = proloc[3] + 1
-		print("stairs down")
 	elseif here == 2 then
 		proloc[3] = proloc[3] - 1
-		print("stairs up")
-	elseif here == 3 then -- there has got to be a better way to do this
-	print("treasure")
+	elseif here == 3 then -- there has got to be a better way to do this. all treasures in a table, probably, and ipairs through it
 		if floor == 1 then -- 1st floor treasures
-		print("on floor 1")
 			if proloc[2] == 29 and proloc[1] == 3 then
-				print("1st treasure")
 				gameStatusMessage = "You found 1000 scrap."
 				prostats.scrap = prostats.scrap + 1000
-				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0 -- that's the direct, can't we use an alias?
-				print("Here is now: "..here)
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0 -- DON'T USE "HERE". that just sets that VARIABLE to the number. has to be the direct array address. not sure how to shortcut it.
+				print(here)
 
 			elseif proloc[2] == 23 and proloc[1] == 3 then
 				gameStatusMessage = "You found 750 scrap."
@@ -552,8 +578,31 @@ function featureCheck() -- see if the player is on a feature, and do something i
 				gameStatusMessage = "You found 500 scrap."
 				prostats.scrap = prostats.scrap + 500
 				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+			end
 				
-			elseif proloc[2] == 13 and proloc[1] == 25 then
+		elseif floor == 2 then
+			if proloc[2] == 3 and proloc[1] == 28 then
+				gameStatusMessage = "You found 750 scrap."
+				prostats.scrap = prostats.scrap + 750
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0 
+				
+				
+			elseif proloc[2] == 5 and proloc[1] == 28 then
+				gameStatusMessage = "You found 750 scrap."
+				prostats.scrap = prostats.scrap + 750
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+
+			elseif proloc[2] == 27 and proloc[1] == 29 then
+				gameStatusMessage = "You found 3000 scrap."
+				prostats.scrap = prostats.scrap + 3000
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0		
+			end
+					
+		end -- end regular treasure
+		
+	elseif here == 4 then -- cyber chests
+		if floor == 1 then
+			if proloc[2] == 13 and proloc[1] == 25 then
 				gameStatusMessage = "You found some schematics. Your maximum speed increases."
 				prostats.speedmax = 5
 				proitems.speed = "yes"
@@ -562,15 +611,42 @@ function featureCheck() -- see if the player is on a feature, and do something i
 			elseif proloc[2] == 27 and proloc[1] == 24 then
 				gameStatusMessage = "You found a battery upgrade. Your maximum power increases."
 				prostats.maxPP = 20
-				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
 				proitems.battery = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+				
 			end
-					
+
 		elseif floor == 2 then
-		
-		end -- end regular treasure
-		
-	-- elseif here == 4 then -- note: cyber chests.
+			if proloc[2] == 15 and proloc[1] == 27 then -- weapon plans
+				gameStatusMessage = "You found some schematics. Your maximum weapon increases."
+				prostats.weaponmax = 5
+				proitems.weapon = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+				
+			elseif proloc[2] == 20 and proloc[1] == 3 then -- armor plans
+				gameStatusMessage = "You found some schematics. Your maximum armor increases."
+				prostats.armormax = 5
+				proitems.armor = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+	
+			elseif proloc[2] == 5 and proloc[1] == 23 then -- factory
+				gameStatusMessage = "Your nanomachines are more efficient at converting scrap now."
+				prostats.pp2 = 3
+				proitems.factory = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+
+			elseif proloc[2] == 5 and proloc[1] == 11 then -- c-steel
+				gameStatusMessage = "Your nanomachines upgrade your frame and your maximum health increases."
+				prostats.maxHP = 150
+				proitems.csteel = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+			
+			elseif proloc[2] == 12 and proloc[1] == 2 then -- key
+				gameStatusMessage = "You find the key to the locked door... and some seeds."
+				proitems.key = "yes"
+				dungeon_features[proloc[3]][proloc[2]][proloc[1]] = 0
+			end
+		end -- end cyber treasure
 	
 	elseif here == 5 then
 		--print("healing pad")
@@ -606,9 +682,12 @@ function featureCheck() -- see if the player is on a feature, and do something i
 		end
 		
 	elseif here == 6 or here == 7 then
-		print("not yet")
+		--print("not yet")
 		gameStatusMessage = "The heal pad isn't recharged yet."
 	
+	elseif here == "S" then
+		view = "endShuttle"
+			
 	end		
 	-- note: no check for 8 or 9, since those block movement and cannot be stood on. use custom messages for those.
 	
