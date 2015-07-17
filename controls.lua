@@ -47,6 +47,10 @@ function keysGame(key)
 						proloc[2] = proloc[2] + 1
 						combatCheck()
 						healPadRegen()
+					elseif checkupF == 9 and proitems.key == "yes" then
+						dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] = "D"
+						gameStatusMessage = "The door opens."	
+							
 					else
 						gameStatusMessage = "Your way is blocked."
 					end
@@ -88,7 +92,11 @@ function keysGame(key)
 			end
 			proface = protagonist_right
 		end
-	
+
+		-- debug messages
+		print("Curently at "..proloc[1]..","..proloc[2]..","..proloc[3])
+		print("Feature here is "..dungeon_features[proloc[3]][proloc[2]][proloc[1]])
+
 		if key == "m" then
 			subkey = "main"
 		end	
@@ -97,7 +105,7 @@ function keysGame(key)
 		if key == "a" then
 			prostats.scrap = prostats.scrap + 100
 		end
-		
+			
 		if key == "s" then
 			prostats.scrap = prostats.scrap + 1000
 		end
@@ -108,6 +116,53 @@ function keysGame(key)
 		
 		if key == "x" then
 			prostats.scrap = prostats.scrap - 1000
+		end
+
+		if key == "u" then -- an upgrade test
+			proitems.weapon = "yes"
+			proitems.armor = "yes"
+			proitems.speed = "yes"
+			proitems.battery = "yes"
+			proitems.factory = "yes"
+			proitems.csteel = "yes"
+			proitems.key = "yes"
+			
+			proskills.heal = 1
+			proskills.harm = 1
+			proskills.shield = 1
+			
+			prostats.currentHP = 150
+			prostats.maxHP = 150
+			prostats.currentPP = 20
+			prostats.maxPP = 20
+			prostats.pp2 = 3
+			prostats.weapon = 3
+			prostats.armor = 3
+			prostats.speed = 3
+			
+		end
+				
+		if key == "p" then -- POWER MODE
+			proitems.weapon = "yes"
+			proitems.armor = "yes"
+			proitems.speed = "yes"
+			proitems.battery = "yes"
+			proitems.factory = "yes"
+			proitems.csteel = "yes"
+			proitems.key = "yes"
+			
+			proskills.heal = 2
+			proskills.harm = 2
+			proskills.shield = 2
+			
+			prostats.currentHP = 150
+			prostats.maxHP = 150
+			prostats.currentPP = 20
+			prostats.maxPP = 20
+			prostats.pp2 = 3
+			prostats.weapon = 5
+			prostats.armor = 5
+			prostats.speed = 5
 		end
 
 	
@@ -211,7 +266,7 @@ function keysGame(key)
 			if scrapPPcursor == 1 then
 				subkey = "mainScrap"
 			elseif scrapPPcursor == 2 then
-						prostats.currentPP = prostats.currentPP + 1
+						prostats.currentPP = prostats.currentPP + prostats.pp2
 						prostats.scrap = prostats.scrap - 10
 						subkey = "mainScrap"
 						scrapPPcursor = 1 -- because otherwise you can keep getting PP once you've gotten down here, even if conditions no longer apply. this should be rewritten to avoid that.
@@ -517,10 +572,15 @@ function keysCombat(key)
 	
 	if combatMenu == "messages" then
 		if key == "return" then
-			combatMenu = "top"
-			combatMessageCounter = 0
-			combatStatusMessage1 = nil
-			combatStatusMessage2 = nil
+			if combatTarget == "empty" then
+				view = "game"
+			
+			else
+				combatMenu = "top"
+				combatMessageCounter = 0
+				combatStatusMessage1 = nil
+				combatStatusMessage2 = nil
+			end
 		end
 	
 	elseif combatMenu == "top" then

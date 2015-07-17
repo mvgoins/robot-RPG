@@ -8,15 +8,17 @@ require "controls"
 require "maps"
 require "assets"
 
-view = "title"
+view = "title" -- can be title, game, combat, gameover, endDoor, endShuttle
 subkey = "none" -- this is for tracking whether you're in the menu on the main screen
 subtarget = "none" -- what part of the menu you're looking at -- maybe not necessary? -- other note: menus as tables?
 gamestate = "none" -- this is "saved" or not, for save game. rename this? actually maybe not necessary at all. have a function check to see if a save file exists
 
 -- check later to see if any of these could be moved/made local 
 
-proloc = {7,31,1} -- coordinates of the character. x, y, z. normal start
+-- starting locations in x,y,z coordinates
+proloc = {7,31,1} -- normal start
 --proloc = {30,4,2} -- second floor stairs
+--proloc = {6,12,2} -- near the boss
 
 proface = protagonist_front -- what direction you're facing. used for the character icon. "front" is looking at player.
 combatCount = 0 -- goes up by 1 every step
@@ -78,12 +80,12 @@ proitems = {
 			["battery"] = "no",
 			["factory"] = "no",
 			["csteel"] = "no",
-			["key"] = "no", 
+			["key"] = "yes", 
 			}
 			
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
 ratstats = {["currentHP"] = 30, ["maxHP"] = 30}
-bossstats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10 }
+bossstats = {["currentHP"] = 100, ["maxHP"] = 100, ["currentPP"] = 10, ["maxPP"]=10, ["alive"] = "yes" }
 
 healPads = {
 			{8,16,1,50},
@@ -110,10 +112,14 @@ function love.update(dt)
 		combatMessageCounter = combatMessageCounter + dt
 		
 		if combatMessageCounter >= 2 then -- display messages for 2 seconds
-			combatMenu = "top"
-			combatMessageCounter = 0
-			combatStatusMessage1 = nil
-			combatStatusMessage2 = nil
+			if combatTarget == "empty" then
+				view = "game"
+			else
+				combatMenu = "top"
+				combatMessageCounter = 0
+				combatStatusMessage1 = nil
+				combatStatusMessage2 = nil
+			end
 		end
 	end
 
@@ -187,7 +193,6 @@ local mbY = 250
 					local drawY = 16 + 32 * (y + 5)
 					
 					if here == 1 then
-					
 						love.graphics.draw(stairsDown,drawX, drawY)
 
 					elseif here == 2 then
@@ -230,7 +235,7 @@ local mbY = 250
 	love.graphics.draw(proface, 16 + 32 * 5,16 + 32 * 5) -- draw the character
 	
 	if gameStatusMessage then
-		love.graphics.printf(gameStatusMessage,0,400,624,"center")
+		love.graphics.printf(gameStatusMessage,32,400,592,"center")
 	end
 	
 	
@@ -552,8 +557,9 @@ function featureCheck() -- see if the player is on a feature, and do something i
 	local floor = proloc[3]
 	local here = dungeon_features[proloc[3]][proloc[2]][proloc[1]]
 	
-	print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
+	--[[print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
 	print("Here is: "..here)
+	print(" ")--]]
 	
 	if here == 0 then
 		gameStatusMessage = "Nothing interesting here."
@@ -687,8 +693,12 @@ function featureCheck() -- see if the player is on a feature, and do something i
 	
 	elseif here == "S" then
 		view = "endShuttle"
+		
+	elseif here == "D" then
+		view = "endDoor"
 			
-	end		
+	end	-- ends all the possible feature checking
+	
 	-- note: no check for 8 or 9, since those block movement and cannot be stood on. use custom messages for those.
 	
 end -- ending featureCheck()
@@ -714,24 +724,35 @@ local padnum = 0
 end
 
 function combatCheck() -- begin the check to see if a random encounter happens -- but it's all combat, I guess? rework for later iteration of the game
---	math.randomseed(os.time()) -- make things more random -- hopefully
 
 	combatCount = combatCount + 1
 	
 	attack = love.math.random(1,25) + combatCount -- this should be made local later; global now for ease of debugging
 
-	if attack > 49 then
+	if proloc[3] == 2 and proloc[2] == 12 and proloc[1] == 4 then
+		if bossstats.alive == "yes" then
+			keyInput = "frozen"
+			combatTarget = "boss"
+			bossstats.currentHP = 100
+			print("full health!")
+			bossstats.currentPP = 10
+			print("full power!")
+			view = "combat"
+			keyInput = "okay"
+			combatCount = 0
+		end
+
+	elseif attack > 49 then
 		keyInput = "frozen" -- I'm not sure if there'd be enough time for someone to hit a key between the time this starts and the time combat actually come sup, but.. might as well freeze the keys just in case
 		combatSelection()
 		view = "combat"
 		keyInput = "okay"
 		combatCount = 0
-	end	
+	end
 end -- end combatCheck
 
 
 function combatSelection()
---	math.randomseed(os.time())
 	combatpicktarget = love.math.random(1,100)
 	
 	if combatpicktarget < 51 then -- should be even distribution, but it is not; check randomness issues
@@ -747,8 +768,10 @@ function combatSelection()
 end -- end combatSelection
 
 function combatProAttack()
---	math.randomseed(os.time())
-	
+
+--	combatStatusMessage1 = nil
+--	combatStatusMessage2 = nil
+		
 	combatDealDamage()
 	
 	if combatTarget == "bat" then
@@ -760,27 +783,38 @@ function combatProAttack()
 		if ratstats.currentHP > 0 then
 			combatTakeDamage()
 		end
-	end
+	
+	elseif combatTarget == "boss" then
+		if bossstats.currentHP > 0 then
+			combatTakeDamage()
+		end
+	
+	end -- end if-target-then-damage
 		
 	combatMenu = "messages"
 	
 end
 
 function combatProScare()
---	math.randomseed(os.time())
 	
 	if love.math.random(1,100) > 25 then
-		view = "game"
-		combatTarget = "empty" -- I don't know if this is necessary
+		if combatTarget == "boss" then
+			proloc[1] = 5
+		end
+		combatStatusMessage1 = "The enemy backs off."
+		combatStatusMessage2 = nil
+		combatMenu = "messages"
+		combatTarget = "empty" -- do this to make love.update clear the fight properly
 	else 
+		combatStatusMessage1 = "The enemy isn't intimidated."
 		combatTakeDamage()
+		combatMenu = "messages"
 	end
 	
 
 end
 
 function combatProHeal()
---	math.randomseed(os.time())
 	
 	prostats.currentPP = prostats.currentPP - 2
 	
@@ -796,10 +830,11 @@ function combatProHeal()
 
 	combatTakeDamage()
 
+	combatMenu = "messages"
+
 end
 
 function combatProHarm()
---	math.randomseed(os.time())
 
 	prostats.currentPP = prostats.currentPP - 6
 	
@@ -822,6 +857,18 @@ function combatProHarm()
 			combatTakeDamage()
 		end
 	end
+	
+	if combatTarget == "boss" then
+		bossstats.currentHP = bossstats.currentHP - harm
+		if bossstats.currentHP <= 0 then
+			combatCleanup() -- should add combat messages here first
+		else
+			combatTakeDamage()
+		end
+	end
+	
+	combatStatusMessage1 = "Your attack did "..harm.." damage."
+	combatMenu = "messages"
 
 end
 
@@ -838,6 +885,10 @@ function combatProShield()
 		prostats.shield = prostats.shield - 1
 	end
 	
+	if combatTarget == "boss" then
+		prostats.shield = prostats.shield - 1.5
+	end
+	
 	combatStatusMessage1 = "You put up an energy field and the enemy attacks."
 	combatStatusMessage2 = "You have "..prostats.shield.." shield points remaining."
 	combatMenu = "messages"
@@ -848,8 +899,6 @@ end
 
 function combatDealDamage()
 
---	math.randomseed(os.time())
-
 	local damage = love.math.random(5,10) + prostats.weapon + math.ceil(0.5 * prostats.speed) -- need something different for speed
 
 	if combatTarget == "bat" then
@@ -857,14 +906,21 @@ function combatDealDamage()
 		if batstats.currentHP <= 0 then 
 			combatCleanup()
 		end
-	end
 	
-	if combatTarget == "rat" then
+	
+	elseif combatTarget == "rat" then
 		ratstats.currentHP = ratstats.currentHP - damage
 		if ratstats.currentHP <= 0 then
 			combatCleanup()
 		end
-	end
+	
+	elseif combatTarget == "boss" then
+		bossstats.currentHP = bossstats.currentHP - damage
+		if bossstats.currentHP <= 0 then
+			combatCleanup()
+		end
+	
+	end -- end the damage dealing
 	
 	combatStatusMessage1 = "You dealt "..damage.." to the enemy."
 
@@ -872,8 +928,6 @@ end
 
 
 function combatTakeDamage()
-
---	math.randomseed(os.time())
 
 	if prostats.shield > 0 then
 		prostats.shield = prostats.shield - 1
@@ -898,6 +952,16 @@ function combatTakeDamage()
 		else
 			combatStatusMessage2 = "Your armor blocked the rat."
 		end		
+	
+	elseif combatTarget == "boss" then
+		local bossdamage = love.math.random(10,15) - prostats.armor
+		if bossdamage > 0 then
+			prostats.currentHP = prostats.currentHP - bossdamage
+			combatStatusMessage2 = "The robots did "..bossdamage.." damage."
+		else
+			combatStatusMessage2 = "Your armor blocked the robots."
+		end
+	
 	end
 	
 	if prostats.currentHP <= 0 then
@@ -914,22 +978,30 @@ function combatCleanup()
 
 	if combatTarget == "bat" then
 		prostats.scrap = prostats.scrap + 50
+		combatStatusMessage2 = "You gained 50 scrap."
 	elseif combatTarget == "rat" then
 		prostats.scrap = prostats.scrap + 100
+		combatStatusMessage2 = "You gained 100 scrap."
+	elseif combatTarget == "boss" then
+		prostats.scrap = prostats.scrap + 1000
+		combatStatusMessage2 = "You gained 1000 scrap."
+		bossstats.alive = "no"
 	end
 	
 	combatTarget = "empty"
 	
 	prostats.shield = 0
-	combatMenu = "top"
+	combatMenu = "messages"
 	combatselect = 1
 	combatskillselect = 1
 	
-	view = "game"
 end
 
 function viewCombat()
 
+
+	-- here is where we'd draw in background pictures
+	love.graphics.draw(combatBorder,0,0) -- draw the border for the screen
 
 	-- draw the target's icon -- the boss part needs to be fixed for double bosses
 	if combatTarget == "bat" then
@@ -938,13 +1010,8 @@ function viewCombat()
 		love.graphics.draw(ratPic,200,16,0,4,4)
 	elseif combatTarget == "boss" then
 		love.graphics.draw(bossPic,128,16,0,4,4)
+		love.graphics.draw(bossPic,256,16,0,4,4)
 	end
-	
-	if combatTargetBonus == "boss" then
-		love.graphics.draw(bossPic,512,16,0,4,4)		
-	end
-	
-	love.graphics.draw(combatBorder,0,0) -- draw the border for the screen
 	
 
 --	love.graphics.print(combatpicktarget,300,100) -- what's going on with who shows up?
@@ -963,8 +1030,12 @@ function viewCombat()
 		love.graphics.draw(menuSelector,32 + 200 * (combatselectskill - 1),353)
 	
 	elseif combatMenu == "messages" then
-		love.graphics.print(combatStatusMessage1,32,350)
-		love.graphics.print(combatStatusMessage2,32,400)
+		if combatStatusMessage1 then
+			love.graphics.print(combatStatusMessage1,32,330)
+		end
+		if combatStatusMessage2 then
+			love.graphics.print(combatStatusMessage2,32,380)
+		end
 	end
 	
 	
@@ -979,29 +1050,40 @@ function viewCombat()
 	if combatTarget == "rat" then
 		love.graphics.print(ratstats.currentHP,32,32)
 	end
+	if combatTarget == "boss" then
+		love.graphics.print(bossstats.currentHP,32,32)
+	end
 
 end
 
 function viewGameOver()
 	love.graphics.printf("THE END?!",0,240,640,"center")
+end
 
+function viewEndDoor()
+end
+
+function viewEndShuttle()
 end
 
 function love.draw() -- decide what to draw on the screen
 	if view == "title" then
 		viewTitle()
-	end
-	
-	if view == "game" then
+		
+	elseif view == "game" then
 		viewGame()
-	end
-	
-	if view == "combat" then
+		
+	elseif view == "combat" then
 		viewCombat()
-	end
-	
-	if view == "gameover" then
+		
+	elseif view == "gameover" then
 		viewGameOver()
+
+	elseif view == "endDoor" then
+		viewEndDoor()
+		
+	elseif view == "endShuttle" then
+		viewEndShuttle()
 	end
 end -- end love.draw
 
