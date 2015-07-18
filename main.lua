@@ -4,6 +4,12 @@ fixedsysM = love.graphics.newFont("Fixedsys500c.ttf",20)
 fixedsysL = love.graphics.newFont("Fixedsys500c.ttf",26)
 love.graphics.setFont(fixedsysM)
 
+--print("save directory is "..love.filesystem.getSaveDirectory())
+--print("getidentity is "..love.filesystem.getIdentity())
+
+print("does the save file exist? "..tostring(love.filesystem.exists("save")))
+print(" ")
+
 require "controls"
 require "maps"
 require "assets"
@@ -67,11 +73,11 @@ prostats = {
 			["pp2"] = 1,
 			}  
 			
-proskills = {
+proskills = {				-- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
 			["heal"] = 1, 
 			["harm"] = 0, 
 			["shield"] = 0,
-			} -- spells, essentially. they use pp. 0 don't have it, level 2 should be max. 
+			}
 			
 proitems = {
 			["weapon"] = "no", 
@@ -80,7 +86,7 @@ proitems = {
 			["battery"] = "no",
 			["factory"] = "no",
 			["csteel"] = "no",
-			["key"] = "yes", 
+			["key"] = "no", 
 			}
 			
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
@@ -101,9 +107,9 @@ colordarkgrey = {82, 82, 82}
 
 function love.load()
 	love.window.setMode(640,480)
-	print(love.math.random(1,100))
-	print(love.math.random(1,100))
-	print(love.math.random(1,100))
+	--print(love.math.random(1,100))
+	--print(love.math.random(1,100))
+	--print(love.math.random(1,100))
 end
 
 function love.update(dt)
@@ -123,6 +129,99 @@ function love.update(dt)
 		end
 	end
 
+end
+
+function saveGame()
+
+	-- it's better to rewrite how the game sets the stats, so it just checks the inventory and then sets them new on load
+	-- but we'll do this for now. practice, I guess.
+	
+	-- prostats
+	love.filesystem.write("save",tostring(prostats.currentHP).."\n")
+	love.filesystem.append("save",tostring(prostats.maxHP).."\n")
+	love.filesystem.append("save",tostring(prostats.currentPP).."\n")
+	love.filesystem.append("save",tostring(prostats.maxPP).."\n")
+	love.filesystem.append("save",tostring(prostats.scrap).."\n")
+	love.filesystem.append("save",tostring(prostats.weapon).."\n")
+	love.filesystem.append("save",tostring(prostats.weaponmax).."\n")
+	love.filesystem.append("save",tostring(prostats.armor).."\n")
+	love.filesystem.append("save",tostring(prostats.armormax).."\n")
+	love.filesystem.append("save",tostring(prostats.speed).."\n")
+	love.filesystem.append("save",tostring(prostats.speedmax).."\n")
+	love.filesystem.append("save",tostring(prostats.shield).."\n")
+	love.filesystem.append("save",tostring(prostats.pp1).."\n")
+	love.filesystem.append("save",tostring(prostats.pp2).."\n")
+	
+	-- proskills
+	love.filesystem.append("save",tostring(proskills.heal).."\n")
+	love.filesystem.append("save",tostring(proskills.harm).."\n")
+	love.filesystem.append("save",tostring(proskills.shield).."\n")
+	
+	--proitems
+	love.filesystem.append("save",tostring(proitems.weapon).."\n")
+	love.filesystem.append("save",tostring(proitems.armor).."\n")
+	love.filesystem.append("save",tostring(proitems.speed).."\n")
+	love.filesystem.append("save",tostring(proitems.battery).."\n")
+	love.filesystem.append("save",tostring(proitems.factory).."\n")
+	love.filesystem.append("save",tostring(proitems.csteel).."\n")
+	love.filesystem.append("save",tostring(proitems.key).."\n")
+	
+	-- boss status
+	love.filesystem.append("save",tostring(bossstats.alive).."\n")
+
+	-- location, added last, because I forgot it at first and don't want to redo all the loadgame indices
+	love.filesystem.append("save",tostring(proloc[1].."\n"))
+	love.filesystem.append("save",tostring(proloc[2].."\n"))
+	love.filesystem.append("save",tostring(proloc[3].."\n"))
+
+
+end
+
+function loadGame()
+
+	local loadgame = {}
+
+	for line in love.filesystem.lines("save") do
+		table.insert(loadgame,line)
+	end
+	
+--[[	for i,v in ipairs(loadgame) do -- test it!
+		print(loadgame[i])
+	end--]]
+
+	prostats.currentHP = loadgame[1] + 0
+	prostats.maxHP = loadgame[2] + 0
+	prostats.currentPP = loadgame[3] + 0
+	prostats.maxPP = loadgame[4] + 0
+	prostats.scrap = loadgame[5] + 0 
+	prostats.weapon = loadgame[6] + 0
+	prostats.weaponmax = loadgame[7] + 0
+	prostats.armor = loadgame[8] + 0
+	prostats.armormax = loadgame[9] + 0
+	prostats.speed = loadgame[10] + 0
+	prostats.speedmax = loadgame[11] + 0
+	prostats.shield = loadgame[12] + 0
+	prostats.pp1 = loadgame[13] + 0
+	prostats.pp2 = loadgame[14] + 0
+	
+	proskills.heal = loadgame[15] + 0
+	proskills.harm = loadgame[16] + 0
+	proskills.shield = loadgame[17] + 0
+	
+	proitems.weapon = loadgame[18]
+	proitems.armor = loadgame[19]
+	proitems.speed = loadgame[20]
+	proitems.battery = loadgame[21]
+	proitems.factory = loadgame[22]
+	proitems.csteel = loadgame[23]
+	proitems.key = loadgame[24]
+	
+	bossstats.alive = loadgame[25]	
+	
+	proloc[1] = loadgame[26] + 0
+	proloc[2] = loadgame[27] + 0
+	proloc[3] = loadgame[28] + 0
+	
 end
 
 function viewTitle() -- the title/start screen
@@ -223,7 +322,10 @@ local mbY = 250
 						love.graphics.draw(shuttle,drawX, drawY)		
 						
 					elseif here == "W" then
-						love.graphics.draw(dungeon_wall,drawX, drawY)			
+						love.graphics.draw(dungeon_wall,drawX, drawY)		
+						
+					elseif here == "D" then
+						love.graphics.draw(outsidelight,drawX,drawY)	
 					end
 				end
 			end
@@ -254,7 +356,8 @@ local mbY = 250
 		love.graphics.print("Scrap",416,132)
 		love.graphics.print("Items",416,182)
 
-		love.graphics.print("Save Game",416,332)
+		love.graphics.print("[S]ave",416,332)
+		love.graphics.print("[L]oad",516,332)
 		
 		if gameMaincursor < 5 then
 			love.graphics.draw(menuSelector,396, 35 + 50 * (gameMaincursor - 1))
@@ -504,6 +607,7 @@ function skillHealCheck()
 		prostats.currentPP = prostats.currentPP - 2
 	
 		local toheal = prostats.currentHP + 10 * proskills.heal
+		subkey = "none"
 
 		if toheal < prostats.maxHP then
 			prostats.currentHP = toheal
@@ -523,32 +627,32 @@ end
 
 function skillHarmCheck()
 	
-	local floor = proloc[3]
-	
-	if prostats.currentPP >= 6 then 
+	if prostats.currentPP >= 6 then
 		if dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] == 8 
 			or dungeon_features[proloc[3]][proloc[2] - 1][proloc[1]] == 8
 			or dungeon_features[proloc[3]][proloc[2]][proloc[1] + 1] == 8
- 			or dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] == 8 then
- 			
+			or dungeon_features[proloc[3]][proloc[2]][proloc[1] - 1] == 8 then
+			
  			for y = -1,1 do -- so right now this destroys everything around the player if one of the things is a rock
  				for x = -1,1 do -- that's.. not great! but there's no actual case where it matters so I'm running with it
- 					dungeon_features[floor][proloc[2] + y][proloc[1] + x] = 0
+ 					dungeon_features[proloc[3]][proloc[2] + y][proloc[1] + x] = 0
  				end
  			end
  			gameStatusMessage = "You removed the rock."
  			prostats.currentPP = prostats.currentPP - 6
+ 			subkey = "none"
  		else
  			gameStatusMessage = "There's nothing to use that on here."
  		end
  	else
 		gameStatusMessage = "You don't have enough power."
 	end
-	
-end
+end	
+
 
 function skillShieldCheck()
 	gameStatusMessage = "There's no need for that now."
+	subkey = "none"
 end
 
 

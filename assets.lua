@@ -5,8 +5,13 @@ protagonist_left = love.graphics.newImage("art/protagonist_left.png")
 protagonist_right = love.graphics.newImage("art/protagonist_right.png")
 
 -- the world
-dungeon_floor = love.graphics.newImage("art/dungeon_floor.png")
-dungeon_wall = love.graphics.newImage("art/dungeon_wall.png")
+--dungeon_floor = love.graphics.newImage("art/dungeon_floor.png")
+--dungeon_wall = love.graphics.newImage("art/dungeon_wall.png")
+
+-- alternates
+dungeon_floor = love.graphics.newImage("art/floor1alt.png")
+dungeon_wall = love.graphics.newImage("art/wallalt.png")
+
 
 floor2 = love.graphics.newImage("art/floor2.png")
 floor3 = love.graphics.newImage("art/floor3.png")
@@ -24,6 +29,8 @@ stairsDown = love.graphics.newImage("art/stairsdown.png")
 rock = love.graphics.newImage("art/rock.png")
 door = love.graphics.newImage("art/cyberdoor.png")
 shuttle = love.graphics.newImage("art/shuttle.png")
+outsidelight = love.graphics.newImage("art/outsidelight2.png")
+
 
 screenborder1 = love.graphics.newImage("art/screenborder1.png")
 screenborder2 = love.graphics.newImage("art/screenborder2.png")

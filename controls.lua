@@ -21,6 +21,10 @@ function keysGame(key)
 			end
 		end
 		
+		if key == "return" then
+			featureCheck() -- WAS: subkey = "mainCheck"
+		end
+		
 		if key == "up" then
 			if dungeon_terrain[proloc[3]][proloc[2] - 1] then
 				local checkupT = dungeon_terrain[proloc[3]][proloc[2] - 1][proloc[1]]
@@ -94,8 +98,9 @@ function keysGame(key)
 		end
 
 		-- debug messages
-		print("Curently at "..proloc[1]..","..proloc[2]..","..proloc[3])
-		print("Feature here is "..dungeon_features[proloc[3]][proloc[2]][proloc[1]])
+		--print("Curently at "..proloc[1]..","..proloc[2]..","..proloc[3])
+		--print("Feature here is "..dungeon_features[proloc[3]][proloc[2]][proloc[1]])
+		--print(" ")
 
 		if key == "m" then
 			subkey = "main"
@@ -203,7 +208,24 @@ function keysGame(key)
 				subkey = "mainSave"
 			end
 		end
-	-- end subkey-main
+		
+		if key == "s" then -- there needs to be an "overwrite save?" submenu
+			saveGame()
+			gameStatusMessage = "Game saved."
+			subkey = "none"
+		end
+		
+		if key == "l" then
+			if love.filesystem.exists("save") then
+				loadGame()
+				gameStatusMessage = "Game loaded."
+				subkey = "none"
+			else
+				gameStatusMessage = "No saved game."
+			end
+		end
+			
+		-- end subkey-main
 	
 	
 	elseif subkey == "mainItems" then
@@ -266,7 +288,7 @@ function keysGame(key)
 			if scrapPPcursor == 1 then
 				subkey = "mainScrap"
 			elseif scrapPPcursor == 2 then
-						prostats.currentPP = prostats.currentPP + prostats.pp2
+						prostats.currentPP = math.min(prostats.currentPP + prostats.pp2,prostats.maxPP)
 						prostats.scrap = prostats.scrap - 10
 						subkey = "mainScrap"
 						scrapPPcursor = 1 -- because otherwise you can keep getting PP once you've gotten down here, even if conditions no longer apply. this should be rewritten to avoid that.
