@@ -18,6 +18,10 @@ view = "title" -- can be title, game, combat, gameover, endDoor, endShuttle
 subkey = "none" -- this is for tracking whether you're in the menu on the main screen
 subtarget = "none" -- what part of the menu you're looking at -- maybe not necessary? -- other note: menus as tables?
 gamestate = "none" -- this is "saved" or not, for save game. rename this? actually maybe not necessary at all. have a function check to see if a save file exists
+panX = 0
+panY = 0
+shuttleengine = 1
+shuttlestate = 0
 
 -- check later to see if any of these could be moved/made local 
 
@@ -25,13 +29,14 @@ gamestate = "none" -- this is "saved" or not, for save game. rename this? actual
 proloc = {7,31,1} -- normal start
 --proloc = {30,4,2} -- second floor stairs
 --proloc = {6,12,2} -- near the boss
+--proloc = {3, 2, 2} -- shuttle bay
 
 proface = protagonist_front -- what direction you're facing. used for the character icon. "front" is looking at player.
 combatCount = 0 -- goes up by 1 every step
 attack = 0 -- this needs to be made local later
 combatTarget = "empty" -- what you're going to fight
 combatTargetBonus = "empty" -- placeholder for multi-target fights
-keyInput = "okay" -- whether or not you can type right now
+keyInput = "okay" -- whether or not you can type right now -- can be "okay" or "frozen"
 combatpicktarget = 0 -- decides what you're going to fight
 combatMenu = "top" -- what menu option you currently have selected
 combatsubMenu = "none"
@@ -128,7 +133,33 @@ function love.update(dt)
 			end
 		end
 	end
-
+	
+	if endstate == "shuttle" or endstate == "door" then
+		if panX > -640 then
+			keyInput = "frozen"
+			panX = panX - (dt + 0.5)
+		else
+			keyInput = "okay"
+		end
+	end
+	
+	if endstate == "shuttle" then
+		if panX < -320 and panX > -640 then
+			panY = panY + dt + 0.4
+		end
+		
+		shuttlestate = shuttlestate + dt
+		
+		if shuttlestate >= 0 and shuttlestate <= 0.1 then
+			shuttleengine = 1
+		elseif shuttlestate >0.1 and shuttlestate <= 0.2 then
+			shuttleengine = 2
+		elseif shuttlestate > 0.2 then
+			shuttlestate = 0
+		end
+		
+	end
+	
 end
 
 function saveGame()
@@ -403,9 +434,6 @@ local mbY = 250
 		love.graphics.draw(menuSelector,396,85 + 50 * (gameScrapcursor - 1))
 	
 
-	elseif subkey == "mainCheck" then
-		love.graphics.print("Checking...",416,82)
-	
 	elseif subkey == "mainItems" then
 		love.graphics.print("Items...",416,82)
 	
@@ -796,11 +824,15 @@ function featureCheck() -- see if the player is on a feature, and do something i
 		gameStatusMessage = "The heal pad isn't recharged yet."
 	
 	elseif here == "S" then
+		endstate = "shuttle"
+		--keyInput = "frozen"
 		view = "endShuttle"
 		
 	elseif here == "D" then
+		endstate = "door"
+		--keyInput = "frozen"
 		view = "endDoor"
-			
+		
 	end	-- ends all the possible feature checking
 	
 	-- note: no check for 8 or 9, since those block movement and cannot be stood on. use custom messages for those.
@@ -1107,7 +1139,7 @@ function viewCombat()
 	-- here is where we'd draw in background pictures
 	love.graphics.draw(combatBorder,0,0) -- draw the border for the screen
 
-	-- draw the target's icon -- the boss part needs to be fixed for double bosses
+	-- draw the target's icon 
 	if combatTarget == "bat" then
 		love.graphics.draw(batPic,200,16,0,4,4)
 	elseif combatTarget == "rat" then
@@ -1144,10 +1176,11 @@ function viewCombat()
 	
 	
 	-- show hit points and power points and shield level (make this better presentation later)
-	love.graphics.print(prostats.currentHP,32,450)
-	love.graphics.print(prostats.currentPP,82,450)
-	love.graphics.print(prostats.shield,132,450)
+	love.graphics.print("Health: "..prostats.currentHP,64,420)
+	love.graphics.print("Power : "..prostats.currentPP,264,420)
+	love.graphics.print("Shield: "..prostats.shield,464,420)
 	
+	--[[
 	if combatTarget == "bat" then
 		love.graphics.print(batstats.currentHP,32,32)
 	end
@@ -1156,7 +1189,7 @@ function viewCombat()
 	end
 	if combatTarget == "boss" then
 		love.graphics.print(bossstats.currentHP,32,32)
-	end
+	end--]]
 
 end
 
@@ -1165,9 +1198,45 @@ function viewGameOver()
 end
 
 function viewEndDoor()
+
+	love.graphics.draw(panorama,panX,0)
+	love.graphics.draw(protagonist_back,1024 + panX,380)
+
+	if panX <= -640 then
+		love.graphics.printf("What will you do next?",0,240,640,"center")
+		keyInput = "okay"
+	end
+	
 end
 
 function viewEndShuttle()
+
+
+	love.graphics.draw(starfield,panX,0)
+
+	-- debug
+	--love.graphics.print(panX,32,300)
+	--love.graphics.print(panY,32,400)
+
+	local offset = 925
+	
+	if panX < -320 then
+		
+		love.graphics.draw(shuttleL,offset + panX,500 - panY)
+		
+		if shuttleengine == 1 then
+			love.graphics.draw(engine1,offset + panX,500 - panY)
+		elseif shuttleengine == 2 then
+			love.graphics.draw(engine2,offset + panX,500 - panY)
+		elseif shuttleengine == 3 then
+			love.graphics.draw(engine3,offset + panX,500 - panY)
+		end
+	end
+	
+	if panX <= -640 then
+		love.graphics.printf("Where will you go next?",0,240,640,"center")
+			keyInput = "okay"
+	end
 end
 
 function love.draw() -- decide what to draw on the screen
@@ -1203,6 +1272,9 @@ function love.keypressed(key)
 			keysCombat(key)
 		elseif view == "gameover" then
 			keysGameOver(key)
+		elseif view == "endShuttle" or view == "endDoor" then
+			keysEnding(key)
+			
 		end
 
 	end

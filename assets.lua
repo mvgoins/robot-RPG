@@ -45,3 +45,12 @@ ratPic = love.graphics.newImage("art/rat.png")
 bossPic = love.graphics.newImage("art/boss.png")
 combatBorder = love.graphics.newImage("art/combatborder.png")
 combatSelector = love.graphics.newImage("art/combatselector.png")
+
+
+-- endings
+starfield = love.graphics.newImage("art/starfield.png")
+shuttleL = love.graphics.newImage("art/shuttleL.png")
+engine1 = love.graphics.newImage("art/engine1.png")
+engine2 = love.graphics.newImage("art/engine2.png")
+engine3 = love.graphics.newImage("art/engine3.png")
+panorama = love.graphics.newImage("art/panorama.png")

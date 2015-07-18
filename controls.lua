@@ -22,7 +22,7 @@ function keysGame(key)
 		end
 		
 		if key == "return" then
-			featureCheck() -- WAS: subkey = "mainCheck"
+			featureCheck()
 		end
 		
 		if key == "up" then
@@ -196,7 +196,7 @@ function keysGame(key)
 		
 		if key == "return" then
 			if gameMaincursor == 1 then
-				featureCheck() -- WAS: subkey = "mainCheck"
+				featureCheck()
 				subkey = "none"
 			elseif gameMaincursor == 2 then
 				subkey = "mainSkills"
@@ -680,3 +680,10 @@ function keysGameOver(key)
 		love.event.quit()
 	end
 end -- end keysGameOver
+
+function keysEnding(key)
+	if key == "escape" or key == "return" then
+		love.event.quit()
+	end
+end
+	
