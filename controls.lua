@@ -52,7 +52,7 @@ function keysGame(key)
 						combatCheck()
 						healPadRegen()
 					elseif checkupF == 9 and proitems.key == "yes" then
-						dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] = "D"
+						dungeon_features[proloc[3]][proloc[2] + 1][proloc[1]] = 12
 						gameStatusMessage = "The door opens."	
 							
 					else
@@ -211,6 +211,7 @@ function keysGame(key)
 		
 		if key == "s" then -- there needs to be an "overwrite save?" submenu
 			saveGame()
+			saveMaps()
 			gameStatusMessage = "Game saved."
 			subkey = "none"
 		end
@@ -596,6 +597,7 @@ function keysCombat(key)
 		if key == "return" then
 			if combatTarget == "empty" then
 				view = "game"
+				combatMenu = nil
 			
 			else
 				combatMenu = "top"

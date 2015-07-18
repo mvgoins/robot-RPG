@@ -15,13 +15,16 @@ require "maps"
 require "assets"
 
 view = "title" -- can be title, game, combat, gameover, endDoor, endShuttle
+
 subkey = "none" -- this is for tracking whether you're in the menu on the main screen
 subtarget = "none" -- what part of the menu you're looking at -- maybe not necessary? -- other note: menus as tables?
-gamestate = "none" -- this is "saved" or not, for save game. rename this? actually maybe not necessary at all. have a function check to see if a save file exists
+
+endstate = "none"
 panX = 0
 panY = 0
 shuttleengine = 1
 shuttlestate = 0
+
 
 -- check later to see if any of these could be moved/made local 
 
@@ -91,7 +94,7 @@ proitems = {
 			["battery"] = "no",
 			["factory"] = "no",
 			["csteel"] = "no",
-			["key"] = "no", 
+			["key"] = "yes", 
 			}
 			
 batstats = {["currentHP"] = 15, ["maxHP"] = 15}
@@ -120,11 +123,13 @@ end
 function love.update(dt)
 	
 	if combatMenu == "messages" then
+		--print(combatMessageCounter)
 		combatMessageCounter = combatMessageCounter + dt
 		
 		if combatMessageCounter >= 2 then -- display messages for 2 seconds
 			if combatTarget == "empty" then
 				view = "game"
+				combatMenu = nil
 			else
 				combatMenu = "top"
 				combatMessageCounter = 0
@@ -138,8 +143,6 @@ function love.update(dt)
 		if panX > -640 then
 			keyInput = "frozen"
 			panX = panX - (dt + 0.5)
-		else
-			keyInput = "okay"
 		end
 	end
 	
@@ -204,18 +207,102 @@ function saveGame()
 	love.filesystem.append("save",tostring(proloc[1].."\n"))
 	love.filesystem.append("save",tostring(proloc[2].."\n"))
 	love.filesystem.append("save",tostring(proloc[3].."\n"))
+		
+end
 
+function saveMaps()
+	-- this is not elegant
+	
+	if love.filesystem.exists("map1") then
+		love.filesystem.remove("map1")
+	end
+	
+	if love.filesystem.exists("map2") then
+		love.filesystem.remove("map2")
+	end
+	
+	love.filesystem.newFile("map1")
+	love.filesystem.newFile("map2")
+	--[[ -- checking to make sure the table outputs correctly
+	for floor,map in ipairs(dungeon_features) do
+		print("floor "..floor)
+		for rowIndex,row in ipairs(dungeon_features[floor]) do
+			print("floor "..floor.." and row "..rowIndex)
+			for columnIndex,column in ipairs(dungeon_features[floor][rowIndex]) do
+				print(columnIndex..","..rowIndex..","..floor.." is "..dungeon_features[floor][rowIndex][columnIndex])
+			end
+		end
+	end --]]
 
+	-- save feature map 1
+	for rowIndex, row in ipairs(dungeon_features[1]) do
+		for columnIndex, column in ipairs(dungeon_features[1][rowIndex]) do
+			love.filesystem.append("map1",tostring(dungeon_features[1][rowIndex][columnIndex]).."\n")
+		end
+	end
+	
+	-- save feature map 2
+	for rowIndex, row in ipairs(dungeon_features[2]) do
+		for columnIndex, column in ipairs(dungeon_features[2][rowIndex]) do
+			love.filesystem.append("map2",tostring(dungeon_features[2][rowIndex][columnIndex]).."\n")
+		end
+	end
 end
 
 function loadGame()
 
 	local loadgame = {}
+	local map1 = {}
+	local map2 = {}
+	
+	local ymap1 = 1
+	local xcount1 = 1
+	local ymap2 = 1
+	local xcount2 = 1
+	
+	for y = 1,32 do -- initialize all the rows in the maps
+		map1[y] = {}
+		map2[y] = {}
+	end
+	
 
 	for line in love.filesystem.lines("save") do
 		table.insert(loadgame,line)
 	end
 	
+	for line in love.filesystem.lines("map1") do
+		table.insert(map1[ymap1],tonumber(line)) -- note: problem for non-number entries! 
+		xcount1 = xcount1 + 1
+		if xcount1 == 33 then
+			xcount1 = 1
+			ymap1 = ymap1 + 1
+		end
+	end
+	
+	for line in love.filesystem.lines("map2") do
+		table.insert(map2[ymap2],tonumber(line)) -- note: problem for non-number entries!
+		xcount2 = xcount2 + 1
+		if xcount2 == 33 then
+			xcount2 = 1
+			ymap2 = ymap2 + 1
+		end
+	end
+	
+	dungeon_features[1] = map1
+	dungeon_features[2] = map2
+	mapcheck()
+	
+--[[
+	for line in love.filesystem.lines("map2") do
+		for y = 1,32 do
+			for x = 1,32 do
+				table.insert(map2[y],tonumber(line))
+			end
+		end
+	end
+	
+	dungeon_features[2] = map2
+	--]]
 --[[	for i,v in ipairs(loadgame) do -- test it!
 		print(loadgame[i])
 	end--]]
@@ -253,6 +340,20 @@ function loadGame()
 	proloc[2] = loadgame[27] + 0
 	proloc[3] = loadgame[28] + 0
 	
+end
+
+function mapcheck()
+
+	-- checking to make sure the table outputs correctly
+	for floor,map in ipairs(dungeon_features) do
+		print("floor "..floor)
+		for rowIndex,row in ipairs(dungeon_features[floor]) do
+			print("floor "..floor.." and row "..rowIndex)
+			for columnIndex,column in ipairs(dungeon_features[floor][rowIndex]) do
+				print(columnIndex..","..rowIndex..","..floor.." is "..dungeon_features[floor][rowIndex][columnIndex])
+			end
+		end
+	end
 end
 
 function viewTitle() -- the title/start screen
@@ -349,13 +450,13 @@ local mbY = 250
 					elseif here == 9 then
 						love.graphics.draw(door,drawX, drawY)
 
-					elseif here == "S" then
+					elseif here == 10 then
 						love.graphics.draw(shuttle,drawX, drawY)		
 						
-					elseif here == "W" then
+					elseif here == 11 then
 						love.graphics.draw(dungeon_wall,drawX, drawY)		
 						
-					elseif here == "D" then
+					elseif here == 12 then
 						love.graphics.draw(outsidelight,drawX,drawY)	
 					end
 				end
@@ -475,7 +576,7 @@ local mbY = 250
 	
 	elseif subkey == "weaponCheck" then
 		local nextwep = prostats.weapon + 1
-		local nextwepcost = nextwep * 1000
+		local nextwepcost = nextwep * 500
 		
 		if prostats.weapon < prostats.weaponmax then
 			love.graphics.printf("Upgrade weapon for "..nextwepcost.." scrap?",416,32,200,"center")
@@ -498,7 +599,7 @@ local mbY = 250
 	
 	elseif subkey == "armorCheck" then
 		local nextarm = prostats.armor + 1
-		local nextarmcost = nextarm * 1000
+		local nextarmcost = nextarm * 500
 		
 		if prostats.armor < prostats.armormax then
 			love.graphics.printf("Upgrade armor for "..nextarmcost.." scrap?",416,32,200,"center")
@@ -522,7 +623,7 @@ local mbY = 250
 
 	elseif subkey == "speedCheck" then
 		local nextspd = prostats.speed + 1
-		local nextspdcost = nextspd * 1000
+		local nextspdcost = nextspd * 500
 		
 		if prostats.speed < prostats.speedmax then
 			love.graphics.printf("Upgrade speed for "..nextspdcost.." scrap?",416,32,200,"center")
@@ -554,7 +655,7 @@ local mbY = 250
 		
 	elseif subkey == "healCheck" then
 		local nextheal = proskills.heal + 1
-		local nextcost = (proskills.heal + 1) * 1500
+		local nextcost = (proskills.heal + 1) * 1000
 		
 		if proskills.heal < 2 then
 			love.graphics.printf("Upgrade Heal for "..nextcost.." scrap?",416,32,200,"center")
@@ -579,7 +680,7 @@ local mbY = 250
 	
 	elseif subkey == "harmCheck" then
 		local nextharm = proskills.harm + 1
-		local nextcost = (proskills.harm + 1) * 1500
+		local nextcost = (proskills.harm + 1) * 1000
 		
 		if proskills.harm < 2 then
 			love.graphics.printf("Upgrade Harm for "..nextcost.." scrap?",416,32,200,"center")
@@ -604,7 +705,7 @@ local mbY = 250
 	
 	elseif subkey == "shieldCheck" then
 		local nextshield = proskills.shield + 1
-		local nextcost = (proskills.shield + 1) * 1500
+		local nextcost = (proskills.shield + 1) * 1000
 		
 		if proskills.shield < 2 then
 			love.graphics.printf("Upgrade Shield for "..nextcost.." scrap?",416,32,200,"center")
@@ -689,9 +790,9 @@ function featureCheck() -- see if the player is on a feature, and do something i
 	local floor = proloc[3]
 	local here = dungeon_features[proloc[3]][proloc[2]][proloc[1]]
 	
-	--[[print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
+	print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
 	print("Here is: "..here)
-	print(" ")--]]
+	print(" ")
 	
 	if here == 0 then
 		gameStatusMessage = "Nothing interesting here."
@@ -823,15 +924,15 @@ function featureCheck() -- see if the player is on a feature, and do something i
 		--print("not yet")
 		gameStatusMessage = "The heal pad isn't recharged yet."
 	
-	elseif here == "S" then
-		endstate = "shuttle"
-		--keyInput = "frozen"
+	elseif here == 10 then
 		view = "endShuttle"
+		endstate = "shuttle"
+--		print("starting shuttle end")
 		
-	elseif here == "D" then
-		endstate = "door"
-		--keyInput = "frozen"
+	elseif here == 12 then
 		view = "endDoor"
+		endstate = "door"
+--		print("starting door end")
 		
 	end	-- ends all the possible feature checking
 	
@@ -874,6 +975,7 @@ function combatCheck() -- begin the check to see if a random encounter happens -
 			bossstats.currentPP = 10
 			print("full power!")
 			view = "combat"
+			combatMenu = "top"
 			keyInput = "okay"
 			combatCount = 0
 		end
@@ -882,6 +984,7 @@ function combatCheck() -- begin the check to see if a random encounter happens -
 		keyInput = "frozen" -- I'm not sure if there'd be enough time for someone to hit a key between the time this starts and the time combat actually come sup, but.. might as well freeze the keys just in case
 		combatSelection()
 		view = "combat"
+		combatMenu = "top"
 		keyInput = "okay"
 		combatCount = 0
 	end
@@ -946,7 +1049,8 @@ function combatProScare()
 		combatTakeDamage()
 		combatMenu = "messages"
 	end
-	
+		combatselect = 1
+	combatskillselect = 1
 
 end
 
@@ -958,7 +1062,7 @@ function combatProHeal()
 
 	if toheal < prostats.maxHP then
 		prostats.currentHP = toheal
-		combatStatusMessage1 = "You repaired "..toheal.." damage."
+		combatStatusMessage1 = "You repaired "..10 * proskills.heal.." damage."
 	else 
 		prostats.currentHP = prostats.maxHP
 		combatStatusMessage1 = "You healed all your damage."
@@ -1022,7 +1126,7 @@ function combatProShield()
 	end
 	
 	if combatTarget == "boss" then
-		prostats.shield = prostats.shield - 1.5
+		prostats.shield = prostats.shield - 1 -- they should do more shield damage, but shields are kind of clumsy at the moment. leave this.
 	end
 	
 	combatStatusMessage1 = "You put up an energy field and the enemy attacks."
@@ -1199,6 +1303,7 @@ end
 
 function viewEndDoor()
 
+	--print("door")
 	love.graphics.draw(panorama,panX,0)
 	love.graphics.draw(protagonist_back,1024 + panX,380)
 
@@ -1257,6 +1362,7 @@ function love.draw() -- decide what to draw on the screen
 		
 	elseif view == "endShuttle" then
 		viewEndShuttle()
+
 	end
 end -- end love.draw
 
