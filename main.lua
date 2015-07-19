@@ -7,8 +7,8 @@ love.graphics.setFont(fixedsysM)
 --print("save directory is "..love.filesystem.getSaveDirectory())
 --print("getidentity is "..love.filesystem.getIdentity())
 
-print("does the save file exist? "..tostring(love.filesystem.exists("save")))
-print(" ")
+--print("does the save file exist? "..tostring(love.filesystem.exists("save")))
+--print(" ")
 
 require "controls"
 require "maps"
@@ -290,7 +290,7 @@ function loadGame()
 	
 	dungeon_features[1] = map1
 	dungeon_features[2] = map2
-	mapcheck()
+	--mapcheck()
 	
 --[[
 	for line in love.filesystem.lines("map2") do
@@ -357,9 +357,12 @@ function mapcheck()
 end
 
 function viewTitle() -- the title/start screen
-	love.graphics.printf("ROBOT QUEST",0,240,640,"center")
+	love.graphics.printf("ROBOT QUEST",0,140,640,"center")
 	love.graphics.printf("[N]ew Game",0,300,640,"center")
-
+	if love.filesystem.exists("save") then
+		love.graphics.printf("[L]oad Game",0,350,640,"center")
+	end
+	
 	--[[ debug stuff, making sure images load. delete this later
 	love.graphics.draw(protagonist_front,0,0)
 	love.graphics.draw(dungeon_floor,64,0)
@@ -371,8 +374,8 @@ end -- end viewTitle
 
 function viewGame() -- the main view of the map/dungeon
 
-local mbX = 32
-local mbY = 250
+	local mbX = 32
+	local mbY = 250
 
 	-- draw the terrain
 	for y = -5,5 do
@@ -724,7 +727,7 @@ local mbY = 250
 			love.graphics.draw(menuSelector,396,135 + 50 * (menuYNcursor - 1))
 		
 		else
-			love.graphics.print("Heal is maxed!",416,32)
+			love.graphics.print("Shield is maxed!",416,32)
 		end	
 	
 	end -- end the whole damn scrapview drawing stack
@@ -790,9 +793,9 @@ function featureCheck() -- see if the player is on a feature, and do something i
 	local floor = proloc[3]
 	local here = dungeon_features[proloc[3]][proloc[2]][proloc[1]]
 	
-	print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
-	print("Here is: "..here)
-	print(" ")
+	--print("floor: "..proloc[3].." y: "..proloc[2].." x: "..proloc[1])
+	--print("Here is: "..here)
+	--print(" ")
 	
 	if here == 0 then
 		gameStatusMessage = "Nothing interesting here."
@@ -801,6 +804,7 @@ function featureCheck() -- see if the player is on a feature, and do something i
 	elseif here == 2 then
 		proloc[3] = proloc[3] - 1
 	elseif here == 3 then -- there has got to be a better way to do this. all treasures in a table, probably, and ipairs through it
+		love.audio.play(treasure)
 		if floor == 1 then -- 1st floor treasures
 			if proloc[2] == 29 and proloc[1] == 3 then
 				gameStatusMessage = "You found 1000 scrap."
@@ -840,6 +844,7 @@ function featureCheck() -- see if the player is on a feature, and do something i
 		end -- end regular treasure
 		
 	elseif here == 4 then -- cyber chests
+		love.audio.play(powerup)
 		if floor == 1 then
 			if proloc[2] == 13 and proloc[1] == 25 then
 				gameStatusMessage = "You found some schematics. Your maximum speed increases."
@@ -892,6 +897,7 @@ function featureCheck() -- see if the player is on a feature, and do something i
 		if prostats.currentHP == prostats.maxHP then
 			gameStatusMessage = "You are currently undamaged."
 		elseif prostats.currentHP + 50 < prostats.maxHP then
+			love.audio.play(healpad)
 			prostats.currentHP = prostats.currentHP + 50
 			
 			for i,v in ipairs(healPads) do
@@ -910,7 +916,8 @@ function featureCheck() -- see if the player is on a feature, and do something i
 		else
 			gameStatusMessage = "All of your damage is repaired."
 			prostats.currentHP = prostats.maxHP
-
+			love.audio.play(healpad)
+			
 			for i,v in ipairs(healPads) do
 				if healPads[i][1] == proloc[1] and healPads[i][2] == proloc[2] and healPads[i][3] == proloc[3] then
 					healPads[i][4] = 0
@@ -1016,16 +1023,19 @@ function combatProAttack()
 	if combatTarget == "bat" then
 		if batstats.currentHP > 0 then
 			combatTakeDamage()
+			love.audio.play(hit1)
 		end
 	
 	elseif combatTarget == "rat" then
 		if ratstats.currentHP > 0 then
 			combatTakeDamage()
+			love.audio.play(hit2)
 		end
 	
 	elseif combatTarget == "boss" then
 		if bossstats.currentHP > 0 then
 			combatTakeDamage()
+			love.audio.play(hit4)
 		end
 	
 	end -- end if-target-then-damage
@@ -1206,6 +1216,7 @@ function combatTakeDamage()
 	
 	if prostats.currentHP <= 0 then
 		view = "gameover"
+		love.audio.play(destroyed)
 	end
 	
 	combatMenu = "top"
@@ -1229,6 +1240,7 @@ function combatCleanup()
 	end
 	
 	combatTarget = "empty"
+	love.audio.play(hit3)
 	
 	prostats.shield = 0
 	combatMenu = "messages"
@@ -1344,9 +1356,23 @@ function viewEndShuttle()
 	end
 end
 
+function viewIntro()
+
+	love.graphics.printf("Your systems activate after a long dormancy.",0,75,640,"center")
+	love.graphics.printf("You are in some caves. There is a locked door nearby.",0,175,640,"center")
+	love.graphics.printf("Maybe there is a key around here.",0,275,640,"center")
+	love.graphics.printf("Or perhaps there is another way out.",0,375,640,"center")
+
+
+	love.graphics.printf("(press return)",0,450,640,"center")
+end
+
 function love.draw() -- decide what to draw on the screen
 	if view == "title" then
 		viewTitle()
+	
+	elseif view == "intro" then
+		viewIntro()
 		
 	elseif view == "game" then
 		viewGame()
@@ -1372,6 +1398,8 @@ function love.keypressed(key)
 
 		if view == "title" then
 			keysTitle(key)
+		elseif view == "intro" then
+			keysIntro(key)
 		elseif view == "game" then
 			keysGame(key)
 		elseif view == "combat" then

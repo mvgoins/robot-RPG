@@ -4,6 +4,19 @@ function keysTitle(key)
 	end
 
 	if key == "n" then
+		view = "intro"
+	end
+	
+	if love.filesystem.exists("save") then
+		if key == "l" then
+			loadGame()
+			view = "game"
+		end
+	end
+end
+
+function keysIntro(key)
+	if key == "return" then
 		view = "game"
 	end
 end
@@ -106,7 +119,8 @@ function keysGame(key)
 			subkey = "main"
 		end	
 		
-		-- debug keys
+		--[[
+		-- debug keys 
 		if key == "a" then
 			prostats.scrap = prostats.scrap + 100
 		end
@@ -170,7 +184,7 @@ function keysGame(key)
 			prostats.speed = 5
 		end
 
-	
+	--]]
 	 -- end subkey = none
 
 
@@ -329,7 +343,7 @@ function keysGame(key)
 	
 	elseif subkey == "weaponCheck" then
 	
-		local weaponcost = (prostats.weapon + 1) * 1000
+		local weaponcost = (prostats.weapon + 1) * 500
 		
 		if key == "escape" then
 			subkey = "scrapAttributes"
@@ -359,7 +373,7 @@ function keysGame(key)
 
 	elseif subkey == "armorCheck" then
 	
-		local armorcost = (prostats.armor + 1) * 1000
+		local armorcost = (prostats.armor + 1) * 500
 		
 		if key == "escape" then
 			subkey = "scrapAttributes"
@@ -389,7 +403,7 @@ function keysGame(key)
 
 	elseif subkey == "speedCheck" then
 	
-		local speedcost = (prostats.speed + 1) * 1000
+		local speedcost = (prostats.speed + 1) * 500
 		
 		if key == "escape" then
 			subkey = "scrapAttributes"
@@ -447,7 +461,7 @@ function keysGame(key)
 
 	elseif subkey == "healCheck" then
 
-		local cost = (proskills.heal + 1) * 1500
+		local cost = (proskills.heal + 1) * 750
 		
 		if key == "escape" then
 			subkey = "scrapSkills"
@@ -476,7 +490,7 @@ function keysGame(key)
 		end
 		
 	elseif subkey == "harmCheck" then
-		local cost = (proskills.harm + 1) * 1500
+		local cost = (proskills.harm + 1) * 750
 		
 		if key == "escape" then
 			subkey = "scrapSkills"
@@ -505,7 +519,7 @@ function keysGame(key)
 		end
 		
 	elseif subkey == "shieldCheck" then
-		local cost = (proskills.shield + 1) * 1500
+		local cost = (proskills.shield + 1) * 750
 		
 		if key == "escape" then
 			subkey = "scrapSkills"
@@ -678,9 +692,14 @@ function keysCombat(key)
 end -- end keysCombat
 
 function keysGameOver(key)
-	if key == "escape" then
+	if key == "escape" or key == "return" then
 		love.event.quit()
 	end
+	--[[ So ideally, this would be a quit / new game / load game screen. HOWEVER.. I don't properly initialize
+		all the character values in a function. They just get set in the main code part. THAT'S TERRIBLE.
+		But I'm pretty much at the end for this little demo thing, so I will leave it as is and avoid that
+		mistake in the future. --]]
+		
 end -- end keysGameOver
 
 function keysEnding(key)

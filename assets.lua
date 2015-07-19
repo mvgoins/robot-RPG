@@ -9,7 +9,7 @@ protagonist_right = love.graphics.newImage("art/protagonist_right.png")
 --dungeon_wall = love.graphics.newImage("art/dungeon_wall.png")
 
 -- alternates
-dungeon_floor = love.graphics.newImage("art/floor1alt.png")
+dungeon_floor = love.graphics.newImage("art/floor1alt2.png")
 dungeon_wall = love.graphics.newImage("art/wallalt.png")
 
 
@@ -54,3 +54,14 @@ engine1 = love.graphics.newImage("art/engine1.png")
 engine2 = love.graphics.newImage("art/engine2.png")
 engine3 = love.graphics.newImage("art/engine3.png")
 panorama = love.graphics.newImage("art/panorama.png")
+
+-- audio
+hit1 = love.audio.newSource("sound/hit1.wav")
+hit2 = love.audio.newSource("sound/hit2.wav")
+hit3 = love.audio.newSource("sound/hit3.wav")
+hit4 = love.audio.newSource("sound/hit4.wav")
+beep = love.audio.newSource ("sound/beep.wav")
+destroyed = love.audio.newSource("sound/gameover.wav")
+powerup = love.audio.newSource("sound/powerup.wav")
+treasure = love.audio.newSource("sound/treasure1.wav")
+healpad = love.audio.newSource("sound/healpad2.wav")
