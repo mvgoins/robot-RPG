@@ -2,8 +2,12 @@
 dragon quest, but with robots
 
 This was a little learning project for me (twitter @mvgoins, email mvgoins@gmail.com)
+
 Game made for love2d 0.9.2 at https://love2d.org/
+
 Sound effects were made with Bfxr at http://www.bfxr.net/
+
+Thanks to the folk in #love@irc.oftc.net for answering some random questions.
 
 To play this game, install love2d, download the game zip, extract it. You can then either either run it
 through the command line, or zip the -contents- of the folder and rename the file extension from 
