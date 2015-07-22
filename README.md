@@ -1,7 +1,7 @@
 # robot-RPG
 dragon quest, but with robots
 
-This was a little learning project for me (twitter @mvgoins, email mvgoins@gmail.com)
+This was a little learning project for me (twitter @mvgoins, email mvgoins@gmail.com). Made over the week 7/12/15 - 7/18/15.
 
 Game made for love2d 0.9.2 at https://love2d.org/
 
